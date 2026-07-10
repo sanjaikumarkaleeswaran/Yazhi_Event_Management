@@ -26,7 +26,15 @@ const services = [
 
 const Home = () => {
   const { data: galleryResponse } = useGallery();
-  const featuredGallery = galleryResponse?.data?.slice(0, 3) || [];
+  
+  const defaultImages = [
+    { imageUrl: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=1200&q=80', altText: 'Luxury Tamil Wedding' },
+    { imageUrl: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80', altText: 'Event Decor' },
+    { imageUrl: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=800&q=80', altText: 'Bride Portrait' },
+  ];
+
+  const fetchedGallery = galleryResponse?.data?.slice(0, 3) || [];
+  const featuredGallery = fetchedGallery.length > 0 ? fetchedGallery : defaultImages;
 
   return (
     <div className="home-page">
