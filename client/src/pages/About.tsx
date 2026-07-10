@@ -1,6 +1,7 @@
 import { Container } from '../components/layout/Container';
 import { Section } from '../components/layout/Section';
 import { useTeam } from '../hooks/useTeam';
+import { SEO } from '../components/common/SEO';
 
 const About = () => {
   const { data: teamResponse, isLoading } = useTeam();
@@ -8,6 +9,11 @@ const About = () => {
 
   return (
     <div>
+      <SEO 
+        title="About Us"
+        description="Learn about the passionate team behind Yazhi Event Management."
+        canonicalUrl="/about"
+      />
       <Section className="bg-primary/5">
         <Container>
           <h1 className="text-4xl font-heading text-primary mb-6">About Yazhi</h1>

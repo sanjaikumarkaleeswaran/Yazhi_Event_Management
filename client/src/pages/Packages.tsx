@@ -1,6 +1,7 @@
 import { Container } from '../components/layout/Container';
 import { Section } from '../components/layout/Section';
 import { usePackages } from '../hooks/usePackages';
+import { SEO } from '../components/common/SEO';
 
 const Packages = () => {
   const { data, isLoading } = usePackages();
@@ -8,6 +9,11 @@ const Packages = () => {
 
   return (
     <Section>
+      <SEO 
+        title="Event Packages"
+        description="View our transparent and premium event management packages."
+        canonicalUrl="/packages"
+      />
       <Container>
         <h1 className="text-4xl font-heading text-primary mb-12 text-center">Our Packages</h1>
         {isLoading ? (

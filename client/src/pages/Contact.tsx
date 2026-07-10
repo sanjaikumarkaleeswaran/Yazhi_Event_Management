@@ -5,6 +5,7 @@ import { Container } from '../components/layout/Container';
 import { Section } from '../components/layout/Section';
 import { useSubmitInquiry } from '../hooks/useSubmitInquiry';
 import { useState } from 'react';
+import { SEO } from '../components/common/SEO';
 
 const inquirySchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -37,6 +38,11 @@ const Contact = () => {
 
   return (
     <Section>
+      <SEO 
+        title="Contact Us"
+        description="Book a consultation with our event experts today."
+        canonicalUrl="/contact"
+      />
       <Container className="max-w-3xl">
         <h1 className="text-4xl font-heading text-primary mb-8 text-center">Book a Consultation</h1>
         

@@ -1,6 +1,7 @@
 import { Container } from '../components/layout/Container';
 import { Section } from '../components/layout/Section';
 import { useGallery } from '../hooks/useGallery';
+import { SEO } from '../components/common/SEO';
 
 const Gallery = () => {
   const { data, isLoading } = useGallery();
@@ -8,6 +9,11 @@ const Gallery = () => {
 
   return (
     <Section>
+      <SEO 
+        title="Event Gallery"
+        description="Browse our portfolio of beautifully executed Tamil weddings and events."
+        canonicalUrl="/gallery"
+      />
       <Container>
         <h1 className="text-4xl font-heading text-primary mb-12 text-center">Event Gallery</h1>
         {isLoading ? (

@@ -1,6 +1,7 @@
 import { Container } from '../components/layout/Container';
 import { Section } from '../components/layout/Section';
 import { useTestimonials } from '../hooks/useTestimonials';
+import { SEO } from '../components/common/SEO';
 
 const Testimonials = () => {
   const { data, isLoading } = useTestimonials();
@@ -8,6 +9,11 @@ const Testimonials = () => {
 
   return (
     <Section>
+      <SEO 
+        title="Client Testimonials"
+        description="Read what our clients have to say about their experience with Yazhi Event Management."
+        canonicalUrl="/testimonials"
+      />
       <Container>
         <h1 className="text-4xl font-heading text-primary mb-12 text-center">Client Stories</h1>
         {isLoading ? (

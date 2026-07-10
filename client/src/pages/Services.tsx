@@ -1,6 +1,7 @@
 import { Container } from '../components/layout/Container';
 import { Section } from '../components/layout/Section';
 import { Link } from 'react-router-dom';
+import { SEO } from '../components/common/SEO';
 
 const Services = () => {
   const servicesList = [
@@ -11,6 +12,11 @@ const Services = () => {
 
   return (
     <Section>
+      <SEO 
+        title="Our Services"
+        description="Explore our range of event management services including Tamil weddings, birthdays, and corporate events."
+        canonicalUrl="/services"
+      />
       <Container>
         <h1 className="text-4xl font-heading text-primary mb-12 text-center">Our Services</h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
