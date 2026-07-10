@@ -1,10 +1,12 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import bcrypt from 'bcrypt';
 
 export interface IUser extends Document {
   name: string;
   email: string;
-  passwordHash: string;
+  password: string;
   role: 'admin';
+  comparePassword(candidatePassword: string): Promise<boolean>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,9 +26,10 @@ const userSchema: Schema<IUser> = new Schema(
       lowercase: true,
       match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address'],
     },
-    passwordHash: {
+    password: {
       type: String,
-      required: [true, 'Password hash is required'],
+      required: [true, 'Password is required'],
+      select: false,
     },
     role: {
       type: String,
@@ -38,5 +41,17 @@ const userSchema: Schema<IUser> = new Schema(
     timestamps: true,
   }
 );
+
+userSchema.pre<IUser>('save', async function () {
+  if (!this.isModified('password')) {
+    return;
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 export default mongoose.model<IUser>('User', userSchema);
