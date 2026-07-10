@@ -1,11 +1,13 @@
 import { BrowserRouter } from 'react-router-dom';
+import { Suspense } from 'react';
+import { AppRoutes } from './routes';
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen flex items-center justify-center">
-        <h1 className="text-3xl font-heading text-primary">Yazhi Event Management</h1>
-      </div>
+      <Suspense fallback={<div className="flex h-screen items-center justify-center text-primary">Loading...</div>}>
+        <AppRoutes />
+      </Suspense>
     </BrowserRouter>
   );
 }
