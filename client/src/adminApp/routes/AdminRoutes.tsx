@@ -16,14 +16,18 @@ const AdminBlog = lazy(() => import('../pages/Blog'));
 const AdminPayments = lazy(() => import('../pages/Payments'));
 const AdminUsers = lazy(() => import('../pages/Users'));
 const AdminSettings = lazy(() => import('../pages/Settings'));
+const AdminClients = lazy(() => import('../pages/Clients'));
+const AdminVendors = lazy(() => import('../pages/Vendors'));
+const AdminAnalytics = lazy(() => import('../pages/Analytics'));
+const AdminActivityLogs = lazy(() => import('../pages/ActivityLogs'));
+const AdminProfile = lazy(() => import('../pages/Profile'));
+const AdminReports = lazy(() => import('../pages/Reports'));
 
 export const AdminRoutes = () => {
   return (
     <Routes>
-      {/* Admin Login is not protected */}
       <Route path="/login" element={<Login />} />
 
-      {/* Protected Admin Routes */}
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
@@ -38,7 +42,13 @@ export const AdminRoutes = () => {
           <Route path="payments" element={<AdminPayments />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="settings" element={<AdminSettings />} />
-          <Route path="*" element={<div className="p-8 text-center text-gray-500">404 - Admin Page Not Found</div>} />
+          <Route path="clients" element={<AdminClients />} />
+          <Route path="vendors" element={<AdminVendors />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="reports" element={<AdminReports />} />
+          <Route path="activity" element={<AdminActivityLogs />} />
+          <Route path="profile" element={<AdminProfile />} />
+          <Route path="*" element={<div className="flex items-center justify-center h-64 text-gray-400 text-lg font-medium">404 — Page Not Found</div>} />
         </Route>
       </Route>
     </Routes>
