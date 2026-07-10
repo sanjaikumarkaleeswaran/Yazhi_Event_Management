@@ -6,12 +6,19 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 
+import galleryRoutes from './routes/gallery.routes';
+import testimonialRoutes from './routes/testimonial.routes';
+import packageRoutes from './routes/package.routes';
+import teamRoutes from './routes/team.routes';
+import inquiryRoutes from './routes/inquiry.routes';
+import { errorHandler, notFoundHandler } from './middleware/errorMiddleware';
+
 const app: Application = express();
 
 // Security and middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: process.env.CLIENT_URL || 'http://localhost:5174',
   credentials: true
 }));
 app.use(express.json());
@@ -35,10 +42,15 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'Server is healthy' });
 });
 
-// Basic Error handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal Server Error' });
-});
+// API Routes
+app.use('/api/gallery', galleryRoutes);
+app.use('/api/testimonials', testimonialRoutes);
+app.use('/api/packages', packageRoutes);
+app.use('/api/team', teamRoutes);
+app.use('/api/inquiries', inquiryRoutes);
+
+// Error handlers
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;
