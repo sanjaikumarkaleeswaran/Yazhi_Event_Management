@@ -2,19 +2,10 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { Plus, Search, Eye, Edit2, Trash2, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { useBookings, useCreateBooking, useUpdateBooking, useDeleteBooking, BookingData } from '../../shared/hooks/useBookings';
 
-type Booking = {
+type Booking = BookingData & {
   id: string;
-  clientName: string;
-  email: string;
-  phone: string;
-  eventType: string;
-  eventDate: string;
-  venue: string;
-  packageName: string;
-  amount: number;
-  status: 'Confirmed' | 'Pending' | 'Completed' | 'Cancelled' | 'Rescheduled';
-  notes: string;
   createdAt: string;
 };
 
@@ -30,18 +21,13 @@ const STATUS_STYLES: Record<string, string> = {
   Rescheduled: 'bg-purple-100 text-purple-700',
 };
 
-const seed: Booking[] = [
-  { id: 'BK-001', clientName: 'Arun Kumar', email: 'arun@example.com', phone: '+91 9876543210', eventType: 'Wedding', eventDate: '2026-10-15', venue: 'Sri Mahal, Tiruppur', packageName: 'Gold', amount: 150000, status: 'Confirmed', notes: 'Outdoor ceremony preferred.', createdAt: '2026-07-01' },
-  { id: 'BK-002', clientName: 'Priya Raj', email: 'priya@example.com', phone: '+91 8765432109', eventType: 'Birthday', eventDate: '2026-08-20', venue: 'Home, Coimbatore', packageName: 'Silver', amount: 75000, status: 'Pending', notes: '', createdAt: '2026-07-03' },
-  { id: 'BK-003', clientName: 'Karthik S', email: 'karthik@example.com', phone: '+91 7654321098', eventType: 'Corporate', eventDate: '2026-09-05', venue: 'Hotel Ritz, Chennai', packageName: 'Platinum', amount: 300000, status: 'Completed', notes: 'Full AV setup needed.', createdAt: '2026-06-15' },
-  { id: 'BK-004', clientName: 'Divya M', email: 'divya@example.com', phone: '+91 6543210987', eventType: 'Valaikappu', eventDate: '2026-07-25', venue: 'Community Hall, Tiruppur', packageName: 'Gold', amount: 120000, status: 'Rescheduled', notes: '', createdAt: '2026-07-05' },
-  { id: 'BK-005', clientName: 'Ramesh V', email: 'ramesh@example.com', phone: '+91 5432109876', eventType: 'Wedding', eventDate: '2026-11-12', venue: 'Grand Palace, Erode', packageName: 'Platinum', amount: 300000, status: 'Cancelled', notes: 'Client cancelled due to personal reasons.', createdAt: '2026-07-08' },
-];
-
 const PAGE_SIZE = 5;
 
 export default function Bookings() {
-  const [bookings, setBookings] = useState<Booking[]>(seed);
+  const { data: bookings = [], isLoading } = useBookings();
+  const createBookingMutation = useCreateBooking();
+  const updateBookingMutation = useUpdateBooking();
+  const deleteBookingMutation = useDeleteBooking();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [page, setPage] = useState(1);
@@ -74,17 +60,17 @@ export default function Bookings() {
   };
 
   const onSubmit = (data: Omit<Booking, 'id' | 'createdAt'>) => {
+    const formattedData = { ...data, amount: Number(data.amount) };
     if (modal === 'create') {
-      const newId = 'BK-' + String(bookings.length + 1).padStart(3, '0');
-      setBookings(bs => [...bs, { ...data, id: newId, createdAt: new Date().toISOString().split('T')[0] }]);
+      createBookingMutation.mutate(formattedData);
     } else if (modal === 'edit' && selected) {
-      setBookings(bs => bs.map(b => b.id === selected.id ? { ...b, ...data } : b));
+      updateBookingMutation.mutate({ id: selected.id, data: formattedData });
     }
     setModal(null);
   };
 
   const handleDelete = () => {
-    if (selected) setBookings(bs => bs.filter(b => b.id !== selected.id));
+    if (selected) deleteBookingMutation.mutate(selected.id);
     setModal(null);
   };
 
