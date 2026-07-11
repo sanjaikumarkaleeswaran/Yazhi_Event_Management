@@ -11,6 +11,7 @@ import testimonialRoutes from './routes/testimonial.routes';
 import packageRoutes from './routes/package.routes';
 import teamRoutes from './routes/team.routes';
 import inquiryRoutes from './routes/inquiry.routes';
+import bookingRoutes from './routes/booking.routes';
 import authRoutes from './routes/auth.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware';
 
@@ -49,6 +50,7 @@ app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/inquiries', inquiryRoutes);
+app.use('/api/bookings', bookingRoutes);
 app.use('/api/auth', authRoutes);
 
 // Error handlers
