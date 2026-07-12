@@ -28,6 +28,7 @@ d:\yazhi_events
 - `GET /api/team` - Retrieve team members
 - `POST /api/inquiries` - Submit a new booking inquiry (Rate limited, validation enabled)
 - `GET, POST, PATCH, DELETE /api/bookings` - Full CRUD for Event Bookings (Admin Protected)
+- `GET /api/bookings/my-bookings` - Fetch user-specific bookings (Client Protected)
 - `GET /health` - Server health check
 
 ## Environment Variables
@@ -82,7 +83,7 @@ This project is prepared for modern PaaS deployment.
 After collecting feedback on this MVP, Phase 2 will introduce:
 - [x] Full Booking System (CRUD via Admin Dashboard)
 - [ ] Admin Event Calendar
-- [ ] Client Dashboard Portal
+- [x] Client Dashboard Portal
 - [ ] Razorpay Payments Integration
 - [ ] WhatsApp Business Integration
 - [ ] Multi-language toggle (English/Tamil)
