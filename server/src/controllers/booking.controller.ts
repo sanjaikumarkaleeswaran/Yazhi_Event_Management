@@ -10,6 +10,19 @@ export const getBookings = async (req: Request, res: Response) => {
   }
 };
 
+export const getMyBookings = async (req: Request, res: Response) => {
+  try {
+    const email = (req as any).user?.email;
+    if (!email) {
+      return res.status(400).json({ status: 'error', message: 'User email not found' });
+    }
+    const bookings = await Booking.find({ email }).sort({ createdAt: -1 });
+    res.status(200).json(bookings);
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Error fetching your bookings' });
+  }
+};
+
 export const createBooking = async (req: Request, res: Response) => {
   try {
     const newBooking = new Booking(req.body);

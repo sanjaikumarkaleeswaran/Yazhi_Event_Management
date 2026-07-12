@@ -21,6 +21,13 @@ export const useBookings = () => {
   });
 };
 
+export const useMyBookings = () => {
+  return useQuery({
+    queryKey: ['my-bookings'],
+    queryFn: () => api.get('/bookings/my-bookings').then((res: any) => res.data),
+  });
+};
+
 export const useCreateBooking = () => {
   const queryClient = useQueryClient();
   return useMutation({
