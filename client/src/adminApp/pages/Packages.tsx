@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { Plus, Edit2, Trash2, Star, Check, ChevronUp } from 'lucide-react';
+import { Plus, Edit2, Trash2, Star, Check } from 'lucide-react';
 
 type Package = {
   id: string;
@@ -48,7 +48,7 @@ export default function Packages() {
   const [featureInput, setFeatureInput] = useState('');
   const [features, setFeatures] = useState<string[]>([]);
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<Omit<Package, 'id' | 'features'>>();
+  const { register, handleSubmit, reset } = useForm<Omit<Package, 'id' | 'features'>>();
 
   const openCreate = () => {
     setEditingPackage(null);

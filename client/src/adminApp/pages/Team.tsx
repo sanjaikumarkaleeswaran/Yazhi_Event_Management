@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { Plus, Edit2, Trash2, X, Phone, Mail, Instagram, Camera } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Phone, Mail, Camera } from 'lucide-react';
 
 type TeamMember = {
   id: string;
@@ -106,7 +106,7 @@ export default function Team() {
                 </div>
                 {m.instagram && (
                   <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <Instagram size={11} className="text-pink-400" /> {m.instagram}
+                    <span className="text-pink-400">🌐</span> {m.instagram}
                   </div>
                 )}
               </div>

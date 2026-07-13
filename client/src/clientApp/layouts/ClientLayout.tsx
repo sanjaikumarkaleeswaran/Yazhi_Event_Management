@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
 import { useState } from 'react';
 import { LayoutDashboard, LogOut, Menu, X, UserCircle, ShoppingBag } from 'lucide-react';

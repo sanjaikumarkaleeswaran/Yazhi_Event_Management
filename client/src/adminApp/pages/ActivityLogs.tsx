@@ -1,4 +1,4 @@
-import { Activity, Clock, User, Globe, Shield } from 'lucide-react';
+import { Clock, User, Globe, Shield } from 'lucide-react';
 
 const logs = [
   { id: 1, action: 'Logged in', user: 'Admin', ip: '192.168.1.1', time: '5 min ago', type: 'auth' },
@@ -26,7 +26,7 @@ export default function ActivityLogs() {
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         <div className="divide-y divide-gray-50">
-          {logs.map((log, i) => (
+          {logs.map((log) => (
             <div key={log.id} className="flex items-start gap-4 p-4 hover:bg-gray-50 transition-colors">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${typeColors[log.type]}`}>
                 {log.type === 'auth' ? <Shield size={14} /> : log.type === 'delete' ? '✕' : log.type === 'upload' ? '↑' : log.type === 'create' ? '+' : '✎'}

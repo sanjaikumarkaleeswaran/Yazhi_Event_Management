@@ -6,7 +6,7 @@ const ClientProfile = () => {
   
   return (
     <div>
-      <SEO title="My Profile" description="Manage your profile" />
+      <SEO title="My Profile" description="Your Yazhi account profile" canonicalUrl="/dashboard/profile" />
       <h1 className="text-2xl font-bold text-gray-900 mb-6">My Profile</h1>
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-2xl">
         <div className="space-y-4">

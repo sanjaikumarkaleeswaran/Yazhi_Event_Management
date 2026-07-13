@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Star, Eye, Trash2, ThumbsUp, ThumbsDown, Search, Filter } from 'lucide-react';
+import { X, Star, Eye, Trash2, ThumbsUp, ThumbsDown, Search } from 'lucide-react';
 
 type Testimonial = {
   id: string;

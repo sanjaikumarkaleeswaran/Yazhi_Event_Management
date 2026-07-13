@@ -18,10 +18,11 @@ const StatCard = ({ title, value, icon: Icon, color }: any) => (
 
 const ClientDashboard = () => {
   const { user } = useAuth();
-  const { data: bookings = [], isLoading } = useMyBookings();
+  const { data: bookingsResponse, isLoading } = useMyBookings();
 
+  const bookings = bookingsResponse?.data || [];
   const totalBookings = bookings.length;
-  const upcomingEvents = bookings.filter((b: any) => new Date(b.eventDate) > new Date() && b.status !== 'Cancelled').length;
+  const upcomingEvents = bookings.filter((b: any) => new Date(b.eventDate) >= new Date() && b.status !== 'Cancelled').length;
   
   // Example calculation for pending payments - assuming pending bookings have unpaid amounts. 
   // Normally this would be a specific payment property on the backend.
@@ -31,7 +32,7 @@ const ClientDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <SEO title="Client Dashboard" description="Manage your Yazhi events" />
+      <SEO title="Client Dashboard" description="Manage your Yazhi events" canonicalUrl="/dashboard" />
       
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>

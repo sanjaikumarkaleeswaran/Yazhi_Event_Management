@@ -6,7 +6,7 @@ import { useGallery } from '../../shared/hooks/useGallery';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.25, 0.8, 0.25, 1] } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8 } }
 };
 
 const staggerContainer = {
@@ -39,8 +39,9 @@ const Home = () => {
   return (
     <div className="home-page">
       <SEO 
-        title="Premium Tamil Wedding & Event Management | Yazhi Events"
+        title="Event Management | Yazhi Events"
         description="Luxury Tamil cultural event management tailored perfectly for you. We handle the details, you enjoy the moment."
+        canonicalUrl="/"
       />
       
       {/* Hero Section */}
@@ -77,7 +78,7 @@ const Home = () => {
             className="hero-image-wrapper"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, ease: [0.25, 0.8, 0.25, 1] }}
+            transition={{ duration: 1.2 }}
           >
             {featuredGallery.length > 0 ? (
               <img 

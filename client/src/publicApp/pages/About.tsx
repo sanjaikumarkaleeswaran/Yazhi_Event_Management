@@ -1,6 +1,6 @@
 import { Container } from '../components/layout/Container';
 import { Section } from '../components/layout/Section';
-import { useTeam } from '../hooks/useTeam';
+import { useTeam } from '../../shared/hooks/useTeam';
 import { SEO } from '../../shared/components/SEO';
 
 const About = () => {

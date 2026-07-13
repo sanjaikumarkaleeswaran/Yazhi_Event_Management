@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { Save, Upload, Globe, Mail, Phone, MapPin, Instagram, Facebook, Youtube, MessageCircle } from 'lucide-react';
+import { Save, Globe, Mail, Phone, MapPin, Upload, MessageCircle } from 'lucide-react';
 
 type SettingsForm = {
   businessName: string;
@@ -30,7 +30,7 @@ const tabs = ['Business', 'Social Media', 'Email & SMTP', 'Integrations', 'SEO']
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('Business');
   const [saved, setSaved] = useState(false);
-  const { register, handleSubmit, formState: { isDirty } } = useForm<SettingsForm>({
+  const { register, handleSubmit } = useForm<SettingsForm>({
     defaultValues: {
       businessName: 'Yazhi Event Management',
       tagline: 'Turning Every Celebration Into A Timeless Memory',
@@ -151,9 +151,9 @@ export default function Settings() {
             <h2 className="text-base font-bold text-gray-900 mb-5">Social Media Links</h2>
             <div className="space-y-4">
               {[
-                { icon: Instagram, label: 'Instagram', name: 'instagram' as const, placeholder: 'https://instagram.com/yazhievents', color: 'text-pink-500' },
-                { icon: Facebook, label: 'Facebook', name: 'facebook' as const, placeholder: 'https://facebook.com/yazhievents', color: 'text-blue-500' },
-                { icon: Youtube, label: 'YouTube', name: 'youtube' as const, placeholder: 'https://youtube.com/@yazhievents', color: 'text-red-500' },
+                { icon: Globe, label: 'Instagram', name: 'instagram' as const, placeholder: 'https://instagram.com/yazhievents', color: 'text-pink-500' },
+                { icon: Globe, label: 'Facebook', name: 'facebook' as const, placeholder: 'https://facebook.com/yazhievents', color: 'text-blue-500' },
+                { icon: Globe, label: 'YouTube', name: 'youtube' as const, placeholder: 'https://youtube.com/@yazhievents', color: 'text-red-500' },
               ].map(s => (
                 <div key={s.name}>
                   <label className={labelClass}>{s.label}</label>

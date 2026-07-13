@@ -3,11 +3,12 @@ import { useMyBookings } from '../../shared/hooks/useBookings';
 import { Calendar, MapPin, Tag } from 'lucide-react';
 
 const ClientBookings = () => {
-  const { data: bookings, isLoading, error } = useMyBookings();
+  const { data: response, isLoading, error } = useMyBookings();
+  const bookings = response?.data || [];
 
   return (
     <div className="space-y-6">
-      <SEO title="My Bookings" description="View your Yazhi events bookings" />
+      <SEO title="My Bookings" description="View your Yazhi events bookings" canonicalUrl="/dashboard/bookings" />
       <h1 className="text-2xl font-bold text-gray-900">My Bookings</h1>
 
       {isLoading ? (
