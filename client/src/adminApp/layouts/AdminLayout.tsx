@@ -7,7 +7,7 @@ import {
   Package, Star, Users, CreditCard, Settings, LogOut, Search,
   Bell, Menu, X, ChevronDown, FileText, BarChart2, Activity,
   UserCircle, ShoppingBag, Truck, Users2, BookOpen, Plus,
-  ChevronRight, Zap
+  ChevronRight
 } from 'lucide-react';
 import clsx from 'clsx';
 

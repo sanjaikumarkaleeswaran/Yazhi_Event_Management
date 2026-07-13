@@ -4,9 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { SEO } from '../../shared/components/SEO';
-import { Button } from '../components/ui/Button';
+
 import { useAuth } from '../../shared/context/AuthContext';
-import api from '../api/axios';
+import api from '../../shared/api/axios';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -82,9 +82,9 @@ const Login = () => {
             </div>
 
             <div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50" disabled={isLoading}>
                 {isLoading ? 'Signing in...' : 'Sign in'}
-              </Button>
+              </button>
             </div>
           </form>
         </div>

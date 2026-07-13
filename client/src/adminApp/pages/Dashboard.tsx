@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../../shared/context/AuthContext';
 import { Link } from 'react-router-dom';
 import {
-  TrendingUp, TrendingDown, DollarSign, Calendar, MessageSquare,
+  DollarSign, Calendar, MessageSquare,
   CheckCircle, Users, Image, Star, Clock, ArrowRight, Plus,
   Activity, Zap
 } from 'lucide-react';
@@ -11,52 +11,7 @@ import {
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 
-const revenueData = [
-  { month: 'Jan', revenue: 185000, bookings: 8 },
-  { month: 'Feb', revenue: 220000, bookings: 10 },
-  { month: 'Mar', revenue: 175000, bookings: 7 },
-  { month: 'Apr', revenue: 310000, bookings: 14 },
-  { month: 'May', revenue: 280000, bookings: 12 },
-  { month: 'Jun', revenue: 395000, bookings: 18 },
-  { month: 'Jul', revenue: 450000, bookings: 21 },
-];
-
-const inquiryData = [
-  { day: 'Mon', count: 12 }, { day: 'Tue', count: 19 }, { day: 'Wed', count: 15 },
-  { day: 'Thu', count: 25 }, { day: 'Fri', count: 31 }, { day: 'Sat', count: 42 }, { day: 'Sun', count: 38 },
-];
-
-const eventTypes = [
-  { name: 'Weddings', value: 45, color: '#C89B3C' },
-  { name: 'Birthday', value: 20, color: '#5A1E1E' },
-  { name: 'Corporate', value: 18, color: '#3B82F6' },
-  { name: 'Others', value: 17, color: '#6B7280' },
-];
-
-const recentActivity = [
-  { id: 1, type: 'inquiry', text: 'New inquiry from Arun Kumar', sub: 'Wedding · Tiruppur', time: '5 min ago', color: 'bg-blue-100 text-blue-600' },
-  { id: 2, type: 'booking', text: 'Booking confirmed: Priya & Karthik', sub: 'Wedding · Oct 15, 2026', time: '1 hour ago', color: 'bg-green-100 text-green-600' },
-  { id: 3, type: 'payment', text: 'Payment received ₹45,000', sub: 'From: Ramesh V.', time: '3 hours ago', color: 'bg-yellow-100 text-yellow-600' },
-  { id: 4, type: 'review', text: 'New 5★ testimonial added', sub: 'Divya & Suresh Wedding', time: '5 hours ago', color: 'bg-purple-100 text-purple-600' },
-  { id: 5, type: 'gallery', text: '12 photos uploaded', sub: 'Kannan Birthday Event', time: 'Yesterday', color: 'bg-pink-100 text-pink-600' },
-];
-
-const upcomingEvents = [
-  { id: 1, title: 'Arun & Priya Wedding', date: 'Jul 20, 2026', type: 'Wedding', status: 'Confirmed', color: 'border-l-[#C89B3C]' },
-  { id: 2, title: 'Karthik Birthday', date: 'Jul 25, 2026', type: 'Birthday', status: 'Pending', color: 'border-l-blue-400' },
-  { id: 3, title: 'TechCorp Annual Meet', date: 'Aug 02, 2026', type: 'Corporate', status: 'Confirmed', color: 'border-l-green-400' },
-];
-
-const stats = [
-  { title: 'Total Revenue', value: '₹24.5L', change: '+12.5%', positive: true, icon: DollarSign, gradient: 'from-amber-400 to-yellow-600', bg: 'bg-amber-50', text: 'text-amber-600' },
-  { title: 'Active Bookings', value: '32', change: '+4.2%', positive: true, icon: Calendar, gradient: 'from-blue-400 to-blue-600', bg: 'bg-blue-50', text: 'text-blue-600' },
-  { title: 'New Inquiries', value: '148', change: '-2.1%', positive: false, icon: MessageSquare, gradient: 'from-violet-400 to-violet-600', bg: 'bg-violet-50', text: 'text-violet-600' },
-  { title: 'Events Done', value: '524', change: '+18.4%', positive: true, icon: CheckCircle, gradient: 'from-emerald-400 to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
-  { title: 'Total Clients', value: '1,284', change: '+8.7%', positive: true, icon: Users, gradient: 'from-pink-400 to-pink-600', bg: 'bg-pink-50', text: 'text-pink-600' },
-  { title: 'Gallery Items', value: '3,612', change: '+22.3%', positive: true, icon: Image, gradient: 'from-indigo-400 to-indigo-600', bg: 'bg-indigo-50', text: 'text-indigo-600' },
-  { title: 'Testimonials', value: '294', change: '+5.1%', positive: true, icon: Star, gradient: 'from-orange-400 to-orange-600', bg: 'bg-orange-50', text: 'text-orange-600' },
-  { title: 'Pending Tasks', value: '17', change: '-3 today', positive: true, icon: Clock, gradient: 'from-red-400 to-red-500', bg: 'bg-red-50', text: 'text-red-600' },
-];
+import { useDashboard } from '../../shared/hooks/useDashboard';
 
 const quickActions = [
   { label: 'Add Inquiry', href: '/admin/inquiries', color: 'bg-blue-500 hover:bg-blue-600' },
@@ -74,9 +29,32 @@ const fadeUp = {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { data: dashboardData, isLoading } = useDashboard();
+  
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  if (isLoading || !dashboardData) {
+    return <div className="flex h-full items-center justify-center text-gray-500">Loading Dashboard...</div>;
+  }
+
+  const formatCurrency = (val: number) => {
+    if (val >= 100000) return `₹${(val / 100000).toFixed(2)}L`;
+    if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`;
+    return `₹${val}`;
+  };
+
+  const dynamicStats = [
+    { title: 'Total Revenue', value: formatCurrency(dashboardData.stats.totalRevenue), change: 'All Time', positive: true, icon: DollarSign, gradient: 'from-amber-400 to-yellow-600', bg: 'bg-amber-50', text: 'text-amber-600' },
+    { title: 'Active Bookings', value: dashboardData.stats.activeBookings.toString(), change: 'Pending/Confirmed', positive: true, icon: Calendar, gradient: 'from-blue-400 to-blue-600', bg: 'bg-blue-50', text: 'text-blue-600' },
+    { title: 'New Inquiries', value: dashboardData.stats.newInquiries.toString(), change: 'Needs follow-up', positive: false, icon: MessageSquare, gradient: 'from-violet-400 to-violet-600', bg: 'bg-violet-50', text: 'text-violet-600' },
+    { title: 'Events Done', value: dashboardData.stats.eventsDone.toString(), change: 'Completed', positive: true, icon: CheckCircle, gradient: 'from-emerald-400 to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    { title: 'Total Clients', value: dashboardData.stats.totalClients.toString(), change: 'Unique', positive: true, icon: Users, gradient: 'from-pink-400 to-pink-600', bg: 'bg-pink-50', text: 'text-pink-600' },
+    { title: 'Gallery Items', value: dashboardData.stats.galleryItems.toString(), change: 'Published', positive: true, icon: Image, gradient: 'from-indigo-400 to-indigo-600', bg: 'bg-indigo-50', text: 'text-indigo-600' },
+    { title: 'Testimonials', value: dashboardData.stats.testimonials.toString(), change: 'Published', positive: true, icon: Star, gradient: 'from-orange-400 to-orange-600', bg: 'bg-orange-50', text: 'text-orange-600' },
+    { title: 'Pending Tasks', value: dashboardData.stats.pendingTasks.toString(), change: 'To do', positive: true, icon: Clock, gradient: 'from-red-400 to-red-500', bg: 'bg-red-50', text: 'text-red-600' },
+  ];
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -106,15 +84,14 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map((s, i) => (
+        {dynamicStats.map((s, i) => (
           <motion.div key={s.title} custom={i} initial="hidden" animate="show" variants={fadeUp}
             className={`${card} p-5 hover:shadow-md transition-shadow cursor-default`}>
             <div className="flex items-start justify-between mb-4">
               <div className={`p-2 rounded-xl ${s.bg}`}>
                 <s.icon size={18} className={s.text} />
               </div>
-              <div className={`flex items-center gap-1 text-xs font-semibold ${s.positive ? 'text-emerald-600' : 'text-red-500'}`}>
-                {s.positive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+              <div className={`flex items-center gap-1 text-[10px] font-semibold text-gray-400`}>
                 {s.change}
               </div>
             </div>
@@ -140,7 +117,7 @@ export default function Dashboard() {
             </select>
           </div>
           <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={revenueData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+            <AreaChart data={dashboardData.revenueData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#C89B3C" stopOpacity={0.25} />
@@ -163,20 +140,20 @@ export default function Dashboard() {
           <p className="text-sm text-gray-400 mb-6">Booking distribution</p>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
-              <Pie data={eventTypes} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={4} dataKey="value">
-                {eventTypes.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+              <Pie data={dashboardData.eventTypes} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={4} dataKey="value">
+                {dashboardData.eventTypes.map((entry, i) => <Cell key={i} fill={entry.color} />)}
               </Pie>
               <Tooltip contentStyle={{ borderRadius: 10, border: 'none', fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
           <div className="space-y-2 mt-4">
-            {eventTypes.map(e => (
+            {dashboardData.eventTypes.map(e => (
               <div key={e.name} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: e.color }} />
                   <span className="text-gray-600">{e.name}</span>
                 </div>
-                <span className="font-semibold text-gray-900">{e.value}%</span>
+                <span className="font-semibold text-gray-900">{e.value} Events</span>
               </div>
             ))}
           </div>
@@ -191,7 +168,7 @@ export default function Dashboard() {
           <h2 className="font-bold text-gray-900 mb-1">Weekly Inquiries</h2>
           <p className="text-sm text-gray-400 mb-5">Last 7 days</p>
           <ResponsiveContainer width="100%" height={160}>
-            <BarChart data={inquiryData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
+            <BarChart data={dashboardData.inquiryData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
               <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9CA3AF' }} />
               <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9CA3AF' }} />
@@ -210,15 +187,15 @@ export default function Dashboard() {
             </Link>
           </div>
           <div className="space-y-3">
-            {upcomingEvents.map(ev => (
-              <div key={ev.id} className={`pl-4 py-3 border-l-4 ${ev.color} bg-gray-50 rounded-r-xl`}>
-                <p className="text-sm font-semibold text-gray-900 leading-snug">{ev.title}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{ev.date} · {ev.type}</p>
+            {dashboardData.upcomingEvents.length > 0 ? dashboardData.upcomingEvents.map(ev => (
+              <div key={ev._id} className={`pl-4 py-3 border-l-4 ${ev.status === 'Confirmed' ? 'border-l-[#C89B3C]' : 'border-l-blue-400'} bg-gray-50 rounded-r-xl`}>
+                <p className="text-sm font-semibold text-gray-900 leading-snug">{ev.clientName}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{new Date(ev.eventDate).toLocaleDateString()} · {ev.eventType}</p>
                 <span className={`inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${ev.status === 'Confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                   {ev.status}
                 </span>
               </div>
-            ))}
+            )) : <p className="text-sm text-gray-400">No upcoming events.</p>}
           </div>
         </motion.div>
 
@@ -229,7 +206,7 @@ export default function Dashboard() {
             <Activity size={16} className="text-gray-300" />
           </div>
           <div className="space-y-4">
-            {recentActivity.map(a => (
+            {dashboardData.recentActivity.length > 0 ? dashboardData.recentActivity.map(a => (
               <div key={a.id} className="flex items-start gap-3">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs ${a.color}`}>
                   <Zap size={14} />
@@ -238,9 +215,9 @@ export default function Dashboard() {
                   <p className="text-sm font-medium text-gray-800 leading-snug truncate">{a.text}</p>
                   <p className="text-xs text-gray-400 truncate">{a.sub}</p>
                 </div>
-                <span className="text-[10px] text-gray-400 shrink-0 mt-0.5">{a.time}</span>
+                <span className="text-[10px] text-gray-400 shrink-0 mt-0.5">{new Date(a.time).toLocaleDateString()}</span>
               </div>
-            ))}
+            )) : <p className="text-sm text-gray-400">No recent activity.</p>}
           </div>
         </motion.div>
       </div>

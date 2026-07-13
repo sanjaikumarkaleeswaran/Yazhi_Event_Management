@@ -5,3 +5,4 @@ build
 logs
 .DS_Store
 admin-flow.md
+*.md
