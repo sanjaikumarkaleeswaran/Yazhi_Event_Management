@@ -12,6 +12,7 @@ import {
   useBulkUpdateBookings, useBulkDeleteBookings, type BookingData 
 } from '../../shared/hooks/useBookings';
 import { useVendors } from '../../shared/hooks/useVendors';
+import { useTeam } from '../../shared/hooks/useTeam';
 
 const PAGE_SIZE = 10;
 const EVENT_TYPES = ['Wedding', 'Birthday', 'Corporate', 'Valaikappu', 'Engagement', 'Anniversary', 'Other'];
@@ -76,8 +77,11 @@ export default function Bookings() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState('Overview');
   const [assigningVendor, setAssigningVendor] = useState(false);
+  const [assigningTeam, setAssigningTeam] = useState(false);
   const { data: vendorsResponse } = useVendors({ limit: 100 });
   const allVendors = vendorsResponse?.data || [];
+  const { data: teamResponse } = useTeam({ limit: 100 });
+  const allTeam = teamResponse?.data || [];
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(bookingSchema) as any
@@ -114,8 +118,14 @@ export default function Bookings() {
   const handleAssignVendor = (vendorId: string) => {
     if (!selected) return;
     const currentVendors = selected.assignedVendors || [];
-    if (!currentVendors.includes(vendorId)) {
-      updateBookingMutation.mutate({ id: selected._id!, data: { assignedVendors: [...currentVendors, vendorId] } as any });
+    const currentIds = currentVendors.map((v: any) => v._id || v);
+    if (!currentIds.includes(vendorId)) {
+      updateBookingMutation.mutate({ 
+        id: selected._id!, 
+        data: { assignedVendors: [...currentIds, vendorId] } as any 
+      }, {
+        onSuccess: (res: any) => setSelected(res.data)
+      });
     }
     setAssigningVendor(false);
   };
@@ -123,7 +133,40 @@ export default function Bookings() {
   const handleRemoveVendor = (vendorId: string) => {
     if (!selected || !window.confirm('Remove vendor from this booking?')) return;
     const currentVendors = selected.assignedVendors || [];
-    updateBookingMutation.mutate({ id: selected._id!, data: { assignedVendors: currentVendors.filter((id: string) => id !== vendorId) } as any });
+    const currentIds = currentVendors.map((v: any) => v._id || v);
+    updateBookingMutation.mutate({ 
+      id: selected._id!, 
+      data: { assignedVendors: currentIds.filter((id: string) => id !== vendorId) } as any 
+    }, {
+      onSuccess: (res: any) => setSelected(res.data)
+    });
+  };
+
+  const handleAssignTeam = (memberId: string) => {
+    if (!selected) return;
+    const currentTeam = selected.assignedTeam || [];
+    const currentIds = currentTeam.map((t: any) => t._id || t);
+    if (!currentIds.includes(memberId)) {
+      updateBookingMutation.mutate({ 
+        id: selected._id!, 
+        data: { assignedTeam: [...currentIds, memberId] } as any 
+      }, {
+        onSuccess: (res: any) => setSelected(res.data)
+      });
+    }
+    setAssigningTeam(false);
+  };
+
+  const handleRemoveTeam = (memberId: string) => {
+    if (!selected || !window.confirm('Remove team member from this booking?')) return;
+    const currentTeam = selected.assignedTeam || [];
+    const currentIds = currentTeam.map((t: any) => t._id || t);
+    updateBookingMutation.mutate({ 
+      id: selected._id!, 
+      data: { assignedTeam: currentIds.filter((id: string) => id !== memberId) } as any 
+    }, {
+      onSuccess: (res: any) => setSelected(res.data)
+    });
   };
 
   const handleDelete = () => {
@@ -461,52 +504,104 @@ export default function Bookings() {
 
                 {activeTab === 'Team & Vendors' && (
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-gray-900">Assigned Vendors</h3>
-                      <button onClick={() => setAssigningVendor(!assigningVendor)} className="px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-semibold hover:bg-gray-800 transition-colors">
-                        {assigningVendor ? 'Cancel' : '+ Assign Vendor'}
-                      </button>
-                    </div>
-                    
-                    {assigningVendor && (
-                      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                        <label className={lbl}>Select a vendor to assign</label>
-                        <select 
-                          className={inp} 
-                          onChange={(e) => {
-                            if (e.target.value) handleAssignVendor(e.target.value);
-                          }}
-                          defaultValue=""
-                        >
-                          <option value="" disabled>Select Vendor...</option>
-                          {allVendors
-                            .filter((v: any) => !(selected.assignedVendors || []).includes(v._id))
-                            .map((v: any) => (
-                              <option key={v._id} value={v._id}>{v.businessName} - {v.category} ({v.availabilityStatus})</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      
+                      {/* Team Assignment Panel */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-gray-900">Assigned Team</h3>
+                          <button onClick={() => setAssigningTeam(!assigningTeam)} className="px-3 py-1.5 bg-[#C89B3C] text-white rounded-lg text-xs font-semibold hover:bg-[#b08630] transition-colors">
+                            {assigningTeam ? 'Cancel' : '+ Assign Staff'}
+                          </button>
+                        </div>
 
-                    <div className="space-y-3">
-                      {(selected.assignedVendors?.length || 0) === 0 ? (
-                        <p className="text-sm text-gray-400 text-center py-6">No vendors assigned yet.</p>
-                      ) : (
-                        (selected.assignedVendors || []).map((vId: string) => {
-                          const v = allVendors.find((av: any) => av._id === vId);
-                          return (
-                            <div key={vId} className="flex justify-between items-center p-4 border border-gray-100 rounded-xl bg-white shadow-sm">
-                              <div>
-                                <h4 className="font-bold text-sm text-gray-900">{v?.businessName || 'Unknown Vendor'}</h4>
-                                <p className="text-xs text-gray-500 mt-0.5">{v?.category || 'Unknown Category'} • {v?.primaryContact || 'N/A'}</p>
+                        {assigningTeam && (
+                          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                            <label className={lbl}>Select available staff to assign</label>
+                            <select 
+                              className={inp} 
+                              onChange={(e) => {
+                                if (e.target.value) handleAssignTeam(e.target.value);
+                              }}
+                              defaultValue=""
+                            >
+                              <option value="" disabled>Select Staff...</option>
+                              {allTeam
+                                .filter((m: any) => !(selected.assignedTeam || []).map((t: any) => t._id || t).includes(m._id))
+                                .map((m: any) => (
+                                  <option key={m._id} value={m._id}>{m.firstName} {m.lastName} - {m.designation} ({m.availabilityStatus})</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          {(selected.assignedTeam?.length || 0) === 0 ? (
+                            <p className="text-xs text-gray-400 text-center py-4 bg-gray-50 rounded-xl">No team members assigned.</p>
+                          ) : (
+                            selected.assignedTeam?.map((m: any) => (
+                              <div key={m._id} className="flex justify-between items-center p-3 border border-gray-100 rounded-xl bg-white shadow-xs">
+                                <div>
+                                  <h4 className="font-bold text-xs text-gray-900">{m.firstName} {m.lastName}</h4>
+                                  <p className="text-[10px] text-gray-500">{m.designation} · {m.department}</p>
+                                </div>
+                                <button onClick={() => handleRemoveTeam(m._id)} className="p-1 text-red-500 hover:bg-red-50 rounded-lg">
+                                  <X size={14} />
+                                </button>
                               </div>
-                              <button onClick={() => handleRemoveVendor(vId)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg">
-                                <X size={16} />
-                              </button>
-                            </div>
-                          );
-                        })
-                      )}
+                            ))
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Vendor Assignment Panel */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-gray-900">Assigned Vendors</h3>
+                          <button onClick={() => setAssigningVendor(!assigningVendor)} className="px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-semibold hover:bg-gray-800 transition-colors">
+                            {assigningVendor ? 'Cancel' : '+ Assign Vendor'}
+                          </button>
+                        </div>
+
+                        {assigningVendor && (
+                          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                            <label className={lbl}>Select a vendor to assign</label>
+                            <select 
+                              className={inp} 
+                              onChange={(e) => {
+                                if (e.target.value) handleAssignVendor(e.target.value);
+                              }}
+                              defaultValue=""
+                            >
+                              <option value="" disabled>Select Vendor...</option>
+                              {allVendors
+                                .filter((v: any) => !(selected.assignedVendors || []).map((av: any) => av._id || av).includes(v._id))
+                                .map((v: any) => (
+                                  <option key={v._id} value={v._id}>{v.businessName} - {v.category} ({v.availabilityStatus})</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          {(selected.assignedVendors?.length || 0) === 0 ? (
+                            <p className="text-xs text-gray-400 text-center py-4 bg-gray-50 rounded-xl">No vendors assigned yet.</p>
+                          ) : (
+                            selected.assignedVendors?.map((v: any) => (
+                              <div key={v._id} className="flex justify-between items-center p-3 border border-gray-100 rounded-xl bg-white shadow-xs">
+                                <div>
+                                  <h4 className="font-bold text-xs text-gray-900">{v.businessName}</h4>
+                                  <p className="text-[10px] text-gray-500">{v.category} • {v.primaryContact || 'N/A'}</p>
+                                </div>
+                                <button onClick={() => handleRemoveVendor(v._id)} className="p-1 text-red-500 hover:bg-red-50 rounded-lg">
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 )}

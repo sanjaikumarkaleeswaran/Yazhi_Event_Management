@@ -268,7 +268,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Refresh token rotation check
-    if (!user.refreshTokens.includes(refreshToken)) {
+    if (!user.refreshTokens || !user.refreshTokens.includes(refreshToken)) {
       // Replay attack! Clear all refresh tokens to secure user account
       user.refreshTokens = [];
       user.activityTimeline.push({
@@ -288,7 +288,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
     const newRefreshToken = signRefreshToken(user._id.toString());
 
     // Replace the old refresh token with the new one
-    user.refreshTokens = user.refreshTokens.filter(t => t !== refreshToken);
+    user.refreshTokens = (user.refreshTokens || []).filter(t => t !== refreshToken);
     user.refreshTokens.push(newRefreshToken);
     user.lastActive = new Date();
     await user.save({ validateBeforeSave: false });
