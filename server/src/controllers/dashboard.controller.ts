@@ -4,6 +4,7 @@ import Inquiry from '../models/Inquiry';
 import GalleryItem from '../models/GalleryItem';
 import Testimonial from '../models/Testimonial';
 import User from '../models/User';
+import TeamMember from '../models/TeamMember';
 
 export const getDashboardData = async (req: Request, res: Response) => {
   try {
@@ -30,6 +31,34 @@ export const getDashboardData = async (req: Request, res: Response) => {
     const galleryItems = await GalleryItem.countDocuments();
     const testimonials = await Testimonial.countDocuments();
     
+    // Team stats for dashboard integration
+    const availableStaff = await TeamMember.countDocuments({ availabilityStatus: 'Available' });
+    const busyStaff = await TeamMember.countDocuments({ availabilityStatus: 'Busy' });
+    const onLeaveStaff = await TeamMember.countDocuments({ availabilityStatus: 'On Leave' });
+
+    // Today's Assignments
+    const startOfToday = new Date();
+    startOfToday.setHours(0,0,0,0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23,59,59,999);
+    
+    const todayBookings = await Booking.find({
+      eventDate: { $gte: startOfToday, $lte: endOfToday },
+      status: { $in: ['Confirmed', 'Pending'] }
+    } as any).populate('assignedTeam');
+
+    const todayAssignments = todayBookings.flatMap(b => (b.assignedTeam || []).map((m: any) => ({
+      memberName: `${m.firstName} ${m.lastName}`,
+      designation: m.designation,
+      bookingNumber: b.bookingNumber,
+      clientName: b.clientName,
+      venue: b.venue
+    })));
+
+    const staffOnLeave = await TeamMember.find({ availabilityStatus: 'On Leave' })
+      .select('firstName lastName designation')
+      .limit(5);
+
     // 2. Upcoming Events (Next 5)
     const upcomingEvents = await Booking.find({ 
       eventDate: { $gte: today },
@@ -58,7 +87,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
         color: 'bg-violet-100 text-violet-600'
       }))
     ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5);
-
+ 
     // 4. Revenue Chart Data (Current Year by Month)
     const currentYear = today.getFullYear();
     const revenueByMonth = await Booking.aggregate([
@@ -80,7 +109,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
       },
       { $sort: { _id: 1 } }
     ]);
-
+ 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const revenueData = months.map((month, index) => {
       const data = revenueByMonth.find(r => r._id === index + 1);
@@ -90,7 +119,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
         bookings: data ? data.bookings : 0
       };
     });
-
+ 
     // 5. Event Types Distribution
     const eventTypesResult = await Booking.aggregate([
       { $group: { _id: '$eventType', value: { $sum: 1 } } },
@@ -103,7 +132,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
       value: e.value,
       color: colors[index % colors.length]
     }));
-
+ 
     // 6. Weekly Inquiries (Last 7 Days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(today.getDate() - 7);
@@ -124,7 +153,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
         count: data ? data.count : 0
       };
     });
-
+ 
     res.status(200).json({
       stats: {
         totalRevenue,
@@ -135,6 +164,13 @@ export const getDashboardData = async (req: Request, res: Response) => {
         galleryItems,
         testimonials,
         pendingTasks: 0 // Will connect when Tasks module is built
+      },
+      teamStats: {
+        available: availableStaff,
+        busy: busyStaff,
+        onLeave: onLeaveStaff,
+        todayAssignments,
+        staffOnLeave
       },
       upcomingEvents,
       recentActivity,

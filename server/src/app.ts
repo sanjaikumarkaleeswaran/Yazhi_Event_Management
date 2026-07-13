@@ -18,6 +18,8 @@ import clientRoutes from './routes/client.routes';
 import vendorRoutes from './routes/vendor.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import paymentRoutes from './routes/payment.routes';
+import userRoutes from './routes/user.routes';
+import notificationRoutes from './routes/notification.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware';
 
 const app: Application = express();
@@ -62,6 +64,8 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error handlers
 app.use(notFoundHandler);

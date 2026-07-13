@@ -3,8 +3,8 @@ import { useAuth } from '../../shared/context/AuthContext';
 import { Link } from 'react-router-dom';
 import {
   DollarSign, Calendar, MessageSquare,
-  CheckCircle, Users, Image, Star, Clock, ArrowRight, Plus,
-  Activity, Zap
+  CheckCircle, Users, Image, Star, ArrowRight, Plus,
+  Activity, Zap, Bell
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 
 import { useDashboard } from '../../shared/hooks/useDashboard';
+import { useNotifications } from '../../shared/hooks/useNotifications';
 
 const quickActions = [
   { label: 'Add Inquiry', href: '/admin/inquiries', color: 'bg-blue-500 hover:bg-blue-600' },
@@ -30,6 +31,7 @@ const fadeUp = {
 export default function Dashboard() {
   const { user } = useAuth();
   const { data: dashboardData, isLoading } = useDashboard();
+  const { data: notificationsData } = useNotifications({ limit: 10 });
   
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -38,6 +40,11 @@ export default function Dashboard() {
   if (isLoading || !dashboardData) {
     return <div className="flex h-full items-center justify-center text-gray-500">Loading Dashboard...</div>;
   }
+
+  const notificationsList = notificationsData?.data?.notifications || [];
+  const criticalWarnings = notificationsList.filter((n: any) => n.priority === 'Critical' && !n.isRead);
+  const announcements = notificationsList.filter((n: any) => n.type === 'Announcement');
+  const unreadCount = notificationsList.filter((n: any) => !n.isRead).length;
 
   const formatCurrency = (val: number) => {
     if (val >= 100000) return `₹${(val / 100000).toFixed(2)}L`;
@@ -53,7 +60,7 @@ export default function Dashboard() {
     { title: 'Total Clients', value: dashboardData.stats.totalClients.toString(), change: 'Unique', positive: true, icon: Users, gradient: 'from-pink-400 to-pink-600', bg: 'bg-pink-50', text: 'text-pink-600' },
     { title: 'Gallery Items', value: dashboardData.stats.galleryItems.toString(), change: 'Published', positive: true, icon: Image, gradient: 'from-indigo-400 to-indigo-600', bg: 'bg-indigo-50', text: 'text-indigo-600' },
     { title: 'Testimonials', value: dashboardData.stats.testimonials.toString(), change: 'Published', positive: true, icon: Star, gradient: 'from-orange-400 to-orange-600', bg: 'bg-orange-50', text: 'text-orange-600' },
-    { title: 'Pending Tasks', value: dashboardData.stats.pendingTasks.toString(), change: 'To do', positive: true, icon: Clock, gradient: 'from-red-400 to-red-500', bg: 'bg-red-50', text: 'text-red-600' },
+    { title: 'Unread Alerts', value: unreadCount.toString(), change: 'Action required', positive: false, icon: Bell, gradient: 'from-red-400 to-red-600', bg: 'bg-red-50', text: 'text-red-600' },
   ];
 
   return (
@@ -81,6 +88,36 @@ export default function Dashboard() {
           </Link>
         </div>
       </motion.div>
+
+      {/* Alert Feed */}
+      {(criticalWarnings.length > 0 || announcements.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {criticalWarnings.slice(0, 2).map((warning: any) => (
+            <motion.div key={warning._id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+              className="p-4 rounded-xl bg-red-50/80 border border-red-200/50 backdrop-blur-md shadow-sm flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center shrink-0">
+                <Zap size={16} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-bold text-sm text-red-900 truncate">{warning.title}</h4>
+                <p className="text-xs text-red-700 mt-0.5">{warning.message}</p>
+              </div>
+            </motion.div>
+          ))}
+          {announcements.slice(0, 2).map((ann: any) => (
+            <motion.div key={ann._id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+              className="p-4 rounded-xl bg-amber-50/80 border border-amber-200/50 backdrop-blur-md shadow-sm flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
+                <Bell size={16} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="font-bold text-sm text-amber-900 truncate">{ann.title}</h4>
+                <p className="text-xs text-amber-700 mt-0.5">{ann.message}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -218,6 +255,76 @@ export default function Dashboard() {
                 <span className="text-[10px] text-gray-400 shrink-0 mt-0.5">{new Date(a.time).toLocaleDateString()}</span>
               </div>
             )) : <p className="text-sm text-gray-400">No recent activity.</p>}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Workforce & Operations Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Staff Availability Card */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }} className={`${card} p-6`}>
+          <h2 className="font-bold text-gray-900 mb-1">Workforce Status</h2>
+          <p className="text-sm text-gray-400 mb-6">Real-time staff availability</p>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="bg-green-50 rounded-xl p-3 border border-green-100/50">
+              <p className="text-xl font-bold text-green-600">{(dashboardData as any).teamStats?.available || 0}</p>
+              <p className="text-[10px] text-green-700 font-semibold mt-1">Available</p>
+            </div>
+            <div className="bg-amber-50 rounded-xl p-3 border border-amber-100/50">
+              <p className="text-xl font-bold text-amber-600">{(dashboardData as any).teamStats?.busy || 0}</p>
+              <p className="text-[10px] text-amber-700 font-semibold mt-1">Busy</p>
+            </div>
+            <div className="bg-red-50 rounded-xl p-3 border border-red-100/50">
+              <p className="text-xl font-bold text-red-600">{(dashboardData as any).teamStats?.onLeave || 0}</p>
+              <p className="text-[10px] text-red-700 font-semibold mt-1">On Leave</p>
+            </div>
+          </div>
+          {(dashboardData as any).teamStats?.staffOnLeave?.length > 0 && (
+            <div className="mt-6 border-t border-gray-100 pt-4">
+              <h3 className="text-xs font-bold text-gray-700 uppercase mb-3">On Leave Today</h3>
+              <div className="space-y-2">
+                {(dashboardData as any).teamStats.staffOnLeave.map((m: any, idx: number) => (
+                  <div key={idx} className="flex justify-between items-center text-xs">
+                    <span className="font-semibold text-gray-800">{m.firstName} {m.lastName}</span>
+                    <span className="text-gray-400">{m.designation}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Today's Assignments */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className={`${card} p-6 lg:col-span-2`}>
+          <h2 className="font-bold text-gray-900 mb-1">Today's Staff Assignments</h2>
+          <p className="text-sm text-gray-400 mb-5">Events scheduled for today and staff on site</p>
+          <div className="overflow-x-auto">
+            {(dashboardData as any).teamStats?.todayAssignments?.length > 0 ? (
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-gray-100 text-gray-500 uppercase font-semibold">
+                    <th className="pb-3">Staff Name</th>
+                    <th className="pb-3">Role</th>
+                    <th className="pb-3">Booking Ref</th>
+                    <th className="pb-3">Client</th>
+                    <th className="pb-3">Venue</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {(dashboardData as any).teamStats.todayAssignments.map((a: any, idx: number) => (
+                    <tr key={idx} className="text-gray-700">
+                      <td className="py-2.5 font-semibold text-gray-900">{a.memberName}</td>
+                      <td className="py-2.5 text-gray-500">{a.designation}</td>
+                      <td className="py-2.5 font-mono text-gray-500">{a.bookingNumber}</td>
+                      <td className="py-2.5">{a.clientName}</td>
+                      <td className="py-2.5 truncate max-w-[120px]" title={a.venue}>{a.venue || 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-sm text-gray-400 text-center py-8">No staff assignments scheduled for today.</p>
+            )}
           </div>
         </motion.div>
       </div>

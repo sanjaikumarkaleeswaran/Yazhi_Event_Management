@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import Client from '../models/Client';
 import Booking from '../models/Booking';
 import Inquiry from '../models/Inquiry';
+import { dispatchClientAdded } from '../utils/notificationDispatcher';
 
 const generateClientCode = () => {
   return `CLI-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
@@ -14,6 +15,9 @@ export const createClient = async (req: Request, res: Response, next: NextFuncti
     data.timeline = [{ action: 'Client Created', description: 'Added to CRM manually', date: new Date() }];
 
     const client = await Client.create(data);
+    
+    await dispatchClientAdded(client);
+
     res.status(201).json({ status: 'success', data: client });
   } catch (error) {
     next(error);

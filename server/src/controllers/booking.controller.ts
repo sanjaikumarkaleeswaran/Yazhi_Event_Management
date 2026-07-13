@@ -1,5 +1,12 @@
 import { Request, Response } from 'express';
 import Booking from '../models/Booking';
+import TeamMember from '../models/TeamMember';
+import { 
+  dispatchBookingCreated, 
+  dispatchBookingUpdated, 
+  dispatchBookingCancelled, 
+  dispatchTeamAssigned 
+} from '../utils/notificationDispatcher';
 
 // Generate Unique Booking Number
 const generateBookingNumber = () => {
@@ -94,8 +101,65 @@ export const createBooking = async (req: Request, res: Response) => {
       date: new Date() 
     }];
 
+    // Validate assigned team if provided
+    if (bookingData.assignedTeam && bookingData.assignedTeam.length > 0) {
+      const targetDate = new Date(bookingData.eventDate);
+      const startOfDay = new Date(targetDate.setHours(0,0,0,0));
+      const endOfDay = new Date(targetDate.setHours(23,59,59,999));
+
+      for (const memberId of bookingData.assignedTeam) {
+        const member = await TeamMember.findById(memberId);
+        if (!member) {
+          return res.status(404).json({ status: 'error', message: `Team member ${memberId} not found` });
+        }
+        if (member.availabilityStatus !== 'Available') {
+          return res.status(400).json({ 
+            status: 'error', 
+            message: `Employee ${member.firstName} ${member.lastName} is not available (Status: ${member.availabilityStatus})` 
+          });
+        }
+
+        // Check for overlaps
+        const overlap = await Booking.findOne({
+          eventDate: { $gte: startOfDay, $lte: endOfDay },
+          assignedTeam: memberId,
+          status: { $in: ['Confirmed', 'Pending'] }
+        } as any);
+        if (overlap) {
+          return res.status(400).json({
+            status: 'error',
+            message: `Employee ${member.firstName} ${member.lastName} has an overlapping booking (${overlap.bookingNumber}) on this date.`
+          });
+        }
+      }
+    }
+
     const newBooking = new Booking(bookingData);
     const savedBooking = await newBooking.save();
+
+    // Dispatch booking created notification
+    await dispatchBookingCreated(savedBooking);
+
+    // Update team members assignedBookings & timeline
+    if (bookingData.assignedTeam && bookingData.assignedTeam.length > 0) {
+      for (const memberId of bookingData.assignedTeam) {
+        const member = await TeamMember.findByIdAndUpdate(memberId, {
+          $addToSet: { assignedBookings: savedBooking._id },
+          $push: {
+            timeline: {
+              action: 'Assigned',
+              description: `Assigned to booking ${savedBooking.bookingNumber}`,
+              date: new Date()
+            }
+          }
+        }, { new: true });
+        
+        if (member) {
+          await dispatchTeamAssigned(savedBooking, member);
+        }
+      }
+    }
+
     res.status(201).json(savedBooking);
   } catch (error: any) {
     res.status(400).json({ status: 'error', message: error.message || 'Error creating booking' });
@@ -129,6 +193,79 @@ export const updateBooking = async (req: Request, res: Response) => {
       timeline.push({ action: 'Document Uploaded', description: 'New document added', date: new Date() });
     }
 
+    // Sync team members if assignedTeam is changed
+    if (updates.assignedTeam) {
+      const oldTeam = existing.assignedTeam?.map(id => id.toString()) || [];
+      const newTeam = updates.assignedTeam.map((id: any) => id.toString());
+      
+      const addedTeam = newTeam.filter((id: string) => !oldTeam.includes(id));
+      const removedTeam = oldTeam.filter((id: string) => !newTeam.includes(id));
+
+      const targetDate = updates.eventDate ? new Date(updates.eventDate) : existing.eventDate;
+      const startOfDay = new Date(new Date(targetDate).setHours(0,0,0,0));
+      const endOfDay = new Date(new Date(targetDate).setHours(23,59,59,999));
+
+      // Validate added team members
+      for (const memberId of addedTeam) {
+        const member = await TeamMember.findById(memberId);
+        if (!member) {
+          return res.status(404).json({ status: 'error', message: `Team member ${memberId} not found` });
+        }
+        if (member.availabilityStatus !== 'Available') {
+          return res.status(400).json({
+            status: 'error',
+            message: `Employee ${member.firstName} ${member.lastName} is not available (Status: ${member.availabilityStatus})`
+          });
+        }
+
+        // Check for overlaps
+        const overlap = await Booking.findOne({
+          _id: { $ne: existing._id },
+          eventDate: { $gte: startOfDay, $lte: endOfDay },
+          assignedTeam: memberId,
+          status: { $in: ['Confirmed', 'Pending'] }
+        } as any);
+        if (overlap) {
+          return res.status(400).json({
+            status: 'error',
+            message: `Employee ${member.firstName} ${member.lastName} has an overlapping booking (${overlap.bookingNumber}) on this date.`
+          });
+        }
+      }
+
+      // Sync database updates for added team
+      for (const memberId of addedTeam) {
+        const member = await TeamMember.findByIdAndUpdate(memberId, {
+          $addToSet: { assignedBookings: existing._id },
+          $push: {
+            timeline: {
+              action: 'Assigned',
+              description: `Assigned to booking ${existing.bookingNumber}`,
+              date: new Date()
+            }
+          }
+        }, { new: true });
+        
+        if (member) {
+          await dispatchTeamAssigned(existing, member);
+        }
+      }
+
+      // Sync database updates for removed team
+      for (const memberId of removedTeam) {
+        await TeamMember.findByIdAndUpdate(memberId, {
+          $pull: { assignedBookings: existing._id },
+          $push: {
+            timeline: {
+              action: 'Removed',
+              description: `Removed from booking ${existing.bookingNumber}`,
+              date: new Date()
+            }
+          }
+        });
+      }
+    }
+
     updates.timeline = timeline;
 
     const updatedBooking = await Booking.findByIdAndUpdate(
@@ -138,6 +275,14 @@ export const updateBooking = async (req: Request, res: Response) => {
     )
     .populate('assignedTeam')
     .populate('assignedVendors');
+
+    if (updatedBooking) {
+      if (updatedBooking.status === 'Cancelled') {
+        await dispatchBookingCancelled(updatedBooking);
+      } else {
+        await dispatchBookingUpdated(updatedBooking);
+      }
+    }
     
     res.status(200).json(updatedBooking);
   } catch (error: any) {
@@ -151,6 +296,24 @@ export const deleteBooking = async (req: Request, res: Response) => {
     if (!deletedBooking) {
       return res.status(404).json({ status: 'error', message: 'Booking not found' });
     }
+
+    // Pull booking reference from all team members
+    await TeamMember.updateMany(
+      { assignedBookings: req.params.id } as any,
+      { 
+        $pull: { assignedBookings: req.params.id },
+        $push: {
+          timeline: {
+            action: 'Booking Cancelled/Deleted',
+            description: `Assigned booking ${deletedBooking.bookingNumber} was deleted`,
+            date: new Date()
+          }
+        }
+      } as any
+    );
+
+    await dispatchBookingCancelled(deletedBooking);
+
     res.status(200).json({ status: 'success', message: 'Booking deleted successfully' });
   } catch (error) {
     res.status(500).json({ status: 'error', message: 'Error deleting booking' });
@@ -190,6 +353,12 @@ export const bulkDeleteBookings = async (req: Request, res: Response) => {
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ status: 'error', message: 'No IDs provided' });
     }
+
+    // Pull booking references from all team members before deleting
+    await TeamMember.updateMany(
+      { assignedBookings: { $in: ids } },
+      { $pull: { assignedBookings: { $in: ids } } }
+    );
 
     await Booking.deleteMany({ _id: { $in: ids } });
     res.status(200).json({ status: 'success', message: 'Bulk delete successful' });

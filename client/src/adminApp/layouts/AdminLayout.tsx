@@ -10,6 +10,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import clsx from 'clsx';
+import { useUnreadNotificationsCount } from '../../shared/hooks/useNotifications';
+import NotificationDrawer from '../components/NotificationDrawer';
 
 const navGroups = [
   {
@@ -66,14 +68,28 @@ const navGroups = [
   },
 ];
 
-const notifications = [
-  { id: 1, text: 'New inquiry from Arun Kumar', time: '2 min ago', unread: true, color: 'bg-blue-500' },
-  { id: 2, text: 'Booking confirmed: Priya & Karthik Wedding', time: '1 hour ago', unread: true, color: 'bg-green-500' },
-  { id: 3, text: 'Payment received: ₹45,000', time: '3 hours ago', unread: false, color: 'bg-yellow-500' },
-];
+const itemPermissionModule: Record<string, string> = {
+  'Dashboard': 'Dashboard',
+  'Inquiries': 'Inquiries',
+  'Bookings': 'Bookings',
+  'Calendar': 'Calendar',
+  'Gallery': 'Blog',
+  'Packages': 'Settings',
+  'Testimonials': 'Blog',
+  'Clients': 'Clients',
+  'Vendors': 'Vendors',
+  'Team': 'Team',
+  'Payments': 'Payments',
+  'Reports': 'Reports',
+  'Analytics': 'Reports',
+  'Blog CMS': 'Blog',
+  'Users': 'Users',
+  'Activity Logs': 'Users',
+  'Settings': 'Settings',
+};
 
 export const AdminLayout = () => {
-  const { logout, user } = useAuth();
+  const { logout, user, hasPermission } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -86,18 +102,29 @@ export const AdminLayout = () => {
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false);
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        // Do not auto-close if drawer is clicked
+      }
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfile(false);
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  const filteredNavGroups = navGroups.map(group => {
+    const filteredItems = group.items.filter(item => {
+      const permissionModule = itemPermissionModule[item.name];
+      if (!permissionModule) return true;
+      return hasPermission(permissionModule, 'view');
+    });
+    return { ...group, items: filteredItems };
+  }).filter(group => group.items.length > 0);
+
   const breadcrumbName = navGroups
     .flatMap(g => g.items)
     .find(n => location.pathname === n.href || location.pathname.startsWith(n.href + '/'))?.name || 'Dashboard';
 
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const { data: unreadCount = 0 } = useUnreadNotificationsCount();
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FC] overflow-hidden" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -131,7 +158,7 @@ export const AdminLayout = () => {
 
         {/* Nav */}
         <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6" style={{ scrollbarWidth: 'none' }}>
-          {navGroups.map(group => (
+          {filteredNavGroups.map(group => (
             <div key={group.label}>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-white/25 px-3 mb-1.5">{group.label}</p>
               <div className="space-y-0.5">
@@ -218,32 +245,7 @@ export const AdminLayout = () => {
                   </span>
                 )}
               </button>
-              <AnimatePresence>
-                {showNotifications && (
-                  <motion.div initial={{ opacity: 0, y: 8, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.95 }} transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
-                    <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-                      <h3 className="font-semibold text-gray-900 text-sm">Notifications</h3>
-                      <span className="text-xs text-[#C89B3C] font-medium cursor-pointer hover:underline">Mark all read</span>
-                    </div>
-                    <div className="divide-y divide-gray-50">
-                      {notifications.map(n => (
-                        <div key={n.id} className={clsx('p-4 flex items-start space-x-3 hover:bg-gray-50 cursor-pointer', n.unread && 'bg-blue-50/30')}>
-                          <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${n.color}`} />
-                          <div>
-                            <p className="text-sm text-gray-800 font-medium leading-snug">{n.text}</p>
-                            <p className="text-xs text-gray-400 mt-1">{n.time}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="p-3 text-center border-t border-gray-100">
-                      <span className="text-xs text-[#C89B3C] font-medium cursor-pointer hover:underline">View all notifications</span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <NotificationDrawer isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
             </div>
 
             {/* Profile */}

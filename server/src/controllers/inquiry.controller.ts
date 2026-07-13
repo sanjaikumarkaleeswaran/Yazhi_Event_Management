@@ -2,6 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { body } from 'express-validator';
 import Inquiry, { InquiryStatus } from '../models/Inquiry';
 import Booking from '../models/Booking';
+import { 
+  dispatchInquiryCreated, 
+  dispatchInquiryConverted 
+} from '../utils/notificationDispatcher';
 
 const generateInquiryNumber = () => {
   return `INQ-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
@@ -28,6 +32,8 @@ export const createInquiry = async (req: Request, res: Response, next: NextFunct
     }];
 
     const newInquiry = await Inquiry.create(inquiryData);
+
+    await dispatchInquiryCreated(newInquiry);
 
     res.status(201).json({ status: 'success', data: newInquiry });
   } catch (error) {
@@ -173,6 +179,8 @@ export const convertToBooking = async (req: Request, res: Response, next: NextFu
     });
 
     await inquiry.save();
+
+    await dispatchInquiryConverted(inquiry);
 
     res.status(200).json({ status: 'success', data: { inquiry, booking: savedBooking } });
   } catch (error) {
