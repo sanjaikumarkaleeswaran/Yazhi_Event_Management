@@ -18,17 +18,15 @@ const createAdmin = async () => {
     const email = 'admin@yazhievents.com';
     const password = 'password123'; // In a real app, change this immediately
 
-    const existingAdmin = await User.findOne({ email });
-    if (existingAdmin) {
-      console.log('⚠️ Admin user already exists:', email);
-      process.exit(0);
-    }
+    await User.deleteMany({ email });
+    console.log('🗑️ Cleared existing admin user if any.');
 
     await User.create({
-      name: 'Yazhi Admin',
+      firstName: 'Yazhi',
+      lastName: 'Admin',
       email,
       password,
-      role: 'admin',
+      role: 'Super Admin',
     });
 
     console.log(`🎉 Admin user created!`);

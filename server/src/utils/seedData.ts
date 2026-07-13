@@ -73,9 +73,66 @@ const gallery = [
 ];
 
 const team = [
-  { name: 'Sanjay Kumar', role: 'Lead Event Manager', bio: 'With over 10 years in the industry, Sanjay ensures every event runs perfectly on schedule.', imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=300', publicId: 'team/1', order: 1 },
-  { name: 'Ananya', role: 'Creative Director', bio: 'Ananya brings traditional aesthetics to life with modern elegance.', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=300', publicId: 'team/2', order: 2 },
-  { name: 'Kannan', role: 'Head of Operations', bio: 'Kannan manages logistics, vendor coordination, and seamless execution.', imageUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=300', publicId: 'team/3', order: 3 },
+  { 
+    employeeId: 'EMP-10001',
+    firstName: 'Sanjay', 
+    lastName: 'Kumar', 
+    email: 'sanjay@yazhievents.com',
+    phone: '9876543210',
+    photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=300', 
+    department: 'Operations',
+    designation: 'Lead Event Manager',
+    skills: ['Logistics', 'Budgeting', 'Vendor Management'],
+    experience: 10,
+    joiningDate: new Date('2022-01-15'),
+    salary: 80000,
+    availabilityStatus: 'Available',
+    employmentStatus: 'Full-time',
+    workingHours: 40,
+    leaveBalance: 15,
+    ratings: 5,
+    timeline: [{ action: 'Employee Created', description: 'Initial onboarding', date: new Date('2022-01-15') }]
+  },
+  { 
+    employeeId: 'EMP-10002',
+    firstName: 'Ananya', 
+    lastName: 'Rao', 
+    email: 'ananya@yazhievents.com',
+    phone: '9876543211',
+    photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=300', 
+    department: 'Design',
+    designation: 'Creative Director',
+    skills: ['Stage Design', 'Aesthetics', 'Floral Arrangement'],
+    experience: 6,
+    joiningDate: new Date('2023-03-10'),
+    salary: 65000,
+    availabilityStatus: 'Available',
+    employmentStatus: 'Full-time',
+    workingHours: 40,
+    leaveBalance: 12,
+    ratings: 5,
+    timeline: [{ action: 'Employee Created', description: 'Initial onboarding', date: new Date('2023-03-10') }]
+  },
+  { 
+    employeeId: 'EMP-10003',
+    firstName: 'Kannan', 
+    lastName: 'Subramanian', 
+    email: 'kannan@yazhievents.com',
+    phone: '9876543212',
+    photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=300', 
+    department: 'Operations',
+    designation: 'Head of Operations',
+    skills: ['Sourcing', 'Logistics', 'Supervision'],
+    experience: 8,
+    joiningDate: new Date('2021-06-01'),
+    salary: 70000,
+    availabilityStatus: 'Available',
+    employmentStatus: 'Full-time',
+    workingHours: 40,
+    leaveBalance: 18,
+    ratings: 4,
+    timeline: [{ action: 'Employee Created', description: 'Initial onboarding', date: new Date('2021-06-01') }]
+  }
 ];
 
 const seedData = async () => {

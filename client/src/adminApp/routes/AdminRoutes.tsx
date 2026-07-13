@@ -1,7 +1,7 @@
 import { lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AdminLayout } from '../layouts/AdminLayout';
-import { ProtectedRoute } from '../components/ProtectedRoute';
+import { ProtectedRoute, PermissionRoute } from '../components/ProtectedRoute';
 
 const Login = lazy(() => import('../pages/Login'));
 const AdminDashboard = lazy(() => import('../pages/Dashboard'));
@@ -30,23 +30,23 @@ export const AdminRoutes = () => {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="inquiries" element={<AdminInquiries />} />
-          <Route path="bookings" element={<AdminBookings />} />
-          <Route path="calendar" element={<AdminCalendar />} />
-          <Route path="gallery" element={<AdminGallery />} />
-          <Route path="packages" element={<AdminPackages />} />
-          <Route path="testimonials" element={<AdminTestimonials />} />
-          <Route path="team" element={<AdminTeam />} />
-          <Route path="blog" element={<AdminBlog />} />
-          <Route path="payments" element={<AdminPayments />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="settings" element={<AdminSettings />} />
-          <Route path="clients" element={<AdminClients />} />
-          <Route path="vendors" element={<AdminVendors />} />
-          <Route path="analytics" element={<AdminAnalytics />} />
-          <Route path="reports" element={<AdminReports />} />
-          <Route path="activity" element={<AdminActivityLogs />} />
+          <Route index element={<PermissionRoute moduleName="Dashboard" element={<AdminDashboard />} />} />
+          <Route path="inquiries" element={<PermissionRoute moduleName="Inquiries" element={<AdminInquiries />} />} />
+          <Route path="bookings" element={<PermissionRoute moduleName="Bookings" element={<AdminBookings />} />} />
+          <Route path="calendar" element={<PermissionRoute moduleName="Calendar" element={<AdminCalendar />} />} />
+          <Route path="gallery" element={<PermissionRoute moduleName="Blog" element={<AdminGallery />} />} />
+          <Route path="packages" element={<PermissionRoute moduleName="Settings" element={<AdminPackages />} />} />
+          <Route path="testimonials" element={<PermissionRoute moduleName="Blog" element={<AdminTestimonials />} />} />
+          <Route path="team" element={<PermissionRoute moduleName="Team" element={<AdminTeam />} />} />
+          <Route path="blog" element={<PermissionRoute moduleName="Blog" element={<AdminBlog />} />} />
+          <Route path="payments" element={<PermissionRoute moduleName="Payments" element={<AdminPayments />} />} />
+          <Route path="users" element={<PermissionRoute moduleName="Users" element={<AdminUsers />} />} />
+          <Route path="settings" element={<PermissionRoute moduleName="Settings" element={<AdminSettings />} />} />
+          <Route path="clients" element={<PermissionRoute moduleName="Clients" element={<AdminClients />} />} />
+          <Route path="vendors" element={<PermissionRoute moduleName="Vendors" element={<AdminVendors />} />} />
+          <Route path="analytics" element={<PermissionRoute moduleName="Reports" element={<AdminAnalytics />} />} />
+          <Route path="reports" element={<PermissionRoute moduleName="Reports" element={<AdminReports />} />} />
+          <Route path="activity" element={<PermissionRoute moduleName="Users" element={<AdminActivityLogs />} />} />
           <Route path="profile" element={<AdminProfile />} />
           <Route path="*" element={<div className="flex items-center justify-center h-64 text-gray-400 text-lg font-medium">404 — Page Not Found</div>} />
         </Route>

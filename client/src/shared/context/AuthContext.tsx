@@ -4,9 +4,15 @@ import api from '../api/axios';
 
 interface User {
   _id: string;
+  firstName: string;
+  lastName: string;
   name: string;
   email: string;
+  phone?: string;
   role: string;
+  photo?: string;
+  permissions?: Record<string, Record<string, boolean>>;
+  status: string;
 }
 
 interface AuthContextType {
@@ -16,6 +22,7 @@ interface AuthContextType {
   login: (userData: User) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  hasPermission: (moduleName: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'approve' | 'assign') => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,12 +63,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const hasPermission = (
+    moduleName: string, 
+    action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'approve' | 'assign'
+  ): boolean => {
+    if (!user) return false;
+    if (user.role === 'Super Admin') return true;
+    if (user.role === 'Admin') return true;
+    
+    const modulePerms = user.permissions?.[moduleName];
+    return !!modulePerms?.[action];
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout, checkAuth, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
