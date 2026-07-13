@@ -13,6 +13,11 @@ import teamRoutes from './routes/team.routes';
 import inquiryRoutes from './routes/inquiry.routes';
 import bookingRoutes from './routes/booking.routes';
 import authRoutes from './routes/auth.routes';
+import dashboardRoutes from './routes/dashboard.routes';
+import clientRoutes from './routes/client.routes';
+import vendorRoutes from './routes/vendor.routes';
+import analyticsRoutes from './routes/analytics.routes';
+import paymentRoutes from './routes/payment.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware';
 
 const app: Application = express();
@@ -52,6 +57,11 @@ app.use('/api/team', teamRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/clients', clientRoutes);
+app.use('/api/vendors', vendorRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Error handlers
 app.use(notFoundHandler);
