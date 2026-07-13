@@ -39,7 +39,7 @@ app.use(morgan('dev'));
 // Rate limiting for API routes
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  max: process.env.NODE_ENV === 'production' ? 100 : 10000, // Generous limit in development to support HMR & polling
   message: 'Too many requests from this IP, please try again after 15 minutes',
   standardHeaders: true,
   legacyHeaders: false,
