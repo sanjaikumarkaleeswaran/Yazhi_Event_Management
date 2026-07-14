@@ -1,89 +1,143 @@
-# Yazhi Event Management
+# Yazhi Event Management Platform
 
-Premium Tamil cultural event management platform. 
+Yazhi Events is an enterprise-grade Event Management and Operations Platform designed for premium Tamil cultural event planning, client bookings, and workforce synchronization.
 
-## Project Architecture (Phase 1 MVP)
+This system provides a full-suite SaaS portal for administrators to manage inquiry pipelines, contract bookings, vendor assignments, team schedules, financial transactions, granular staff permissions, and real-time status feeds.
 
-This is a full-stack MERN application built with modern tooling:
-- **Frontend**: React 19, Vite, TypeScript, Tailwind CSS, TanStack Query, React Hook Form, Zod.
-- **Backend**: Node.js, Express, TypeScript, Mongoose.
-- **Database**: MongoDB Atlas.
+---
 
-### Folder Structure
-```
-d:\yazhi_events
-├── client/          # Vite React application
-│   ├── public/      # Static assets (sitemap, robots)
-│   └── src/         # React source code (components, hooks, pages, api)
-├── server/          # Node.js/Express backend
-│   └── src/         # API source code (controllers, routes, models, middleware)
+## 🚀 Key Modules & Architecture
+
+The application is structured as a decoupled full-stack TypeScript application:
+
+*   **Frontend**: Built with **React 19**, **Vite**, **TypeScript**, **Tailwind CSS**, and **Framer Motion**. Utilizes **TanStack Query** for robust, real-time data caching, polling, and automatic invalidation.
+*   **Backend**: Powered by **Node.js**, **Express**, **TypeScript**, **Helmet** security guards, and **Mongoose**.
+*   **Database**: **MongoDB Atlas** (using highly optimized indexing, pre-save hooks, and aggregation pipelines).
+
+### Core Features
+
+1.  **Lead Management (CRM)**: Custom pipelines to track leads and inquiries, with one-click conversion of leads into active bookings.
+2.  **Event Booking Engine**: Manages event schedules, venues, and status lifecycles (Inquiry, Confirmed, Completed, Cancelled).
+3.  **Workforce & Team Management**: Schedules employees, defines roles, tracks availability, and prevents staff double-booking overlaps.
+4.  **Vendor & Resource Ledger**: Unified directory to assign specific vendor resources to bookings.
+5.  **Granular Role-Based Access Control (RBAC)**: Custom permissions matrix (view, create, edit, delete, export, approve, assign) supporting Super Admin, Admin, Manager, Coordinator, Employee, Vendor, and Client.
+6.  **Real-Time Notification Engine**: Decoupled, event-driven dispatcher generating instant alerts on key events (booking modifications, CRM inquiries, team assignments, security warnings). Displays alerts in a premium, real-time polling sliding drawer.
+7.  **Financial Ledger & Payments**: Integrated Razorpay API transaction tracking with support for partial payments and CSV export.
+8.  **Deep Analytics Dashboard**: Aggregates business performance (revenue streams, booking distributions, lead conversion percentages) using MongoDB aggregation pipelines.
+
+---
+
+## 📂 Project Structure
+
+```text
+yazhi_events/
+├── client/                     # Vite React Frontend App
+│   ├── public/                 # Static public assets
+│   └── src/
+│       ├── adminApp/           # Admin portal layouts, components, and pages
+│       ├── clientApp/          # Client dashboard portal
+│       ├── publicApp/          # Marketing landing site
+│       └── shared/             # Global Contexts, API instances, hooks, and schemas
+├── server/                     # Express Node.js Backend App
+│   ├── src/
+│   │   ├── config/             # DB and system connection setups
+│   │   ├── controllers/        # REST route controller handlers
+│   │   ├── middleware/         # Security guards, RBAC, error handlers
+│   │   ├── models/             # Mongoose schemas & TypeScript interfaces
+│   │   ├── routes/             # Express routing definitions
+│   │   └── utils/              # Seeders, admin creators, notification dispatchers
+│   └── tsconfig.json
 └── docker-compose.yml
 ```
 
-## Available API Endpoints
+---
 
-- `GET /api/gallery` - Retrieve gallery images (supports `?eventType=` filter)
-- `GET /api/testimonials` - Retrieve approved client testimonials
-- `GET /api/packages` - Retrieve pricing packages
-- `GET /api/team` - Retrieve team members
-- `POST /api/inquiries` - Submit a new booking inquiry (Rate limited, validation enabled)
-- `GET, POST, PATCH, DELETE /api/bookings` - Full CRUD for Event Bookings (Admin Protected)
-- `GET /api/bookings/my-bookings` - Fetch user-specific bookings (Client Protected)
-- `GET /health` - Server health check
+## 🔌 API Endpoints Summary
 
-## Environment Variables
+### Authentication & RBAC (`/api/auth`)
+*   `POST /api/auth/login` - Authenticate users and set secure HttpOnly cookies.
+*   `POST /api/auth/refresh` - Rotate access/refresh tokens with replay-attack protection.
+*   `POST /api/auth/logout` - Clear sessions and expire active cookies.
+*   `GET /api/auth/me` - Retrieve currently logged-in user profile.
+*   `PATCH /api/auth/change-password` - Modify passwords with session invalidation.
+
+### Staff & Users (`/api/users`)
+*   `GET /api/users` - Search, filter, and page system users.
+*   `POST /api/users` - Create user with role inheritance.
+*   `PATCH /api/users/:id/permissions` - Override specific CRUD permission matrix checkboxes.
+*   `PATCH /api/users/:id/role` - Modify role levels.
+
+### Events & Bookings (`/api/bookings`)
+*   `GET /api/bookings` - Retrieve all bookings (filtered by status, payment, and date).
+*   `POST /api/bookings` - Establish a new booking event.
+*   `PATCH /api/bookings/:id` - Modify booking details.
+*   `GET /api/bookings/my-bookings` - Retrieve customer-specific bookings (Client Portal).
+
+### Notifications (`/api/notifications`)
+*   `GET /api/notifications` - Retrieve feed alerts matching user role scope.
+*   `GET /api/notifications/unread-count` - Poll count of unread items.
+*   `PATCH /api/notifications/:id/read` - Mark alert as read.
+*   `PATCH /api/notifications/read-all` - Bulk mark all notifications as read.
+*   `DELETE /api/notifications/clear` - Flush user alert history.
+
+### Analytics & Reports (`/api/analytics`)
+*   `GET /api/analytics/dashboard` - Get monthly earnings, booking allocations, and pipeline metrics.
+*   `GET /api/analytics/export-ledgers` - Compile transactions list into CSV spreadsheet.
+
+---
+
+## 🛠️ Environment Variables Setup
 
 ### Server (`server/.env`)
-```
+```env
 PORT=5000
-MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/yazhi
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/yazhieve
+JWT_SECRET=super_secret_access_key_123!
+JWT_REFRESH_SECRET=super_secret_refresh_key_456!
 CLIENT_URL=http://localhost:5174
 ```
 
 ### Client (`client/.env`)
-```
+```env
 VITE_API_URL=http://localhost:5000/api
 ```
 
-## Build & Run Instructions
+---
+
+## 🏃 Local Setup & Running Instructions
 
 ### 1. Installation
-Run `npm install` in both the `client/` and `server/` directories.
+Run `npm install` inside both the client and server root folders to install dependencies:
+```bash
+# Install Server dependencies
+cd server && npm install
 
-### 2. Development
-Start both servers simultaneously in two terminal windows:
-- **Backend**: `cd server && npm run dev` (Runs on port 5000)
-- **Frontend**: `cd client && npm run dev` (Runs on port 5174)
+# Install Client dependencies
+cd ../client && npm install
+```
 
-### 3. Production Build
-- **Backend**: `cd server && npm run build` (Compiles TypeScript to `dist/`)
-- **Frontend**: `cd client && npm run build` (Compiles Vite React to `dist/`)
+### 2. Database Seeding & Admin Setup
+Create the initial Super Admin account (`admin@yazhievents.com` / `password123`) and seed mock data:
+```bash
+# Inside /server
+npm run seed
+```
 
-## Deployment Guide
+### 3. Running the Project
+Launch both servers concurrently:
+*   **Backend Server**: Run `npm run dev` in `/server` (Starts at `http://localhost:5000`)
+*   **Frontend Client**: Run `npm run dev` in `/client` (Starts at `http://localhost:5174`)
 
-This project is prepared for modern PaaS deployment.
+---
 
-### Frontend -> Vercel
-1. Connect your GitHub repository to Vercel.
-2. Select the `client` directory as the Root Directory.
-3. Vercel will automatically detect Vite and configure the build settings.
-4. Add Environment Variable: `VITE_API_URL=https://your-render-url.onrender.com/api`
+## 📈 Roadmap Status
 
-### Backend -> Render
-1. Connect your GitHub repository to Render (Web Service).
-2. Set the Root Directory to `server`.
-3. Build Command: `npm install && npm run build`
-4. Start Command: `npm start` (Make sure to add `"start": "node dist/server.js"` to your server package.json)
-5. Add Environment Variables: `MONGO_URI`, `CLIENT_URL=https://your-vercel-url.vercel.app`, `PORT=5000`.
-
-### Database -> MongoDB Atlas
-1. Ensure the IP Access List in Atlas is set to allow connections from Render (or `0.0.0.0/0` for universal web service access).
-
-## Recommended Phase 2 Roadmap
-After collecting feedback on this MVP, Phase 2 will introduce:
-- [x] Full Booking System (CRUD via Admin Dashboard)
-- [ ] Admin Event Calendar
-- [x] Client Dashboard Portal
-- [ ] Razorpay Payments Integration
-- [ ] WhatsApp Business Integration
-- [ ] Multi-language toggle (English/Tamil)
+- [x] Phase 1: Core Marketing Site & Public Inquiries
+- [x] Phase 2: Booking Management & Admin Panels
+- [x] Phase 3: Client Dashboard & Booking Trackers
+- [x] Phase 4: Reports, Financial Aggregations & CSV Exports (Module 7)
+- [x] Phase 5: Razorpay Payment Ledgers & Balance Tracking (Module 8)
+- [x] Phase 6: Enterprise Workforce & Staff Schedules (Module 10)
+- [x] Phase 7: Granular Permission Matrices & RBAC Guards (Module 11)
+- [x] Phase 8: Real-Time Notification Center Drawer & Polling (Module 12)
+- [ ] Phase 9: WhatsApp & SMS CRM Alerts
