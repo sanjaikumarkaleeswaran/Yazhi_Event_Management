@@ -278,3 +278,68 @@ export const dispatchCalendarConflict = async (booking: any, conflictDetails: st
     });
   }
 };
+
+export const dispatchArticlePublished = async (post: any) => {
+  const rolesToNotify = ['Super Admin', 'Admin', 'Manager', 'Coordinator'] as const;
+  for (const role of rolesToNotify) {
+    await createNotification({
+      title: 'New Article Published 📝',
+      message: `The article "${post.title}" has been successfully published.`,
+      type: 'Blog',
+      priority: 'Medium',
+      recipientType: role,
+      module: 'Blog',
+      referenceId: post._id,
+      referenceType: 'BlogPost'
+    });
+  }
+};
+
+export const dispatchArticleScheduled = async (post: any) => {
+  const rolesToNotify = ['Super Admin', 'Admin', 'Manager', 'Coordinator'] as const;
+  for (const role of rolesToNotify) {
+    await createNotification({
+      title: 'Article Scheduled ⏰',
+      message: `The article "${post.title}" is scheduled to publish on ${new Date(post.scheduledAt).toLocaleString()}.`,
+      type: 'Blog',
+      priority: 'Low',
+      recipientType: role,
+      module: 'Blog',
+      referenceId: post._id,
+      referenceType: 'BlogPost'
+    });
+  }
+};
+
+export const dispatchArticleUpdated = async (post: any) => {
+  const rolesToNotify = ['Super Admin', 'Admin', 'Manager'] as const;
+  for (const role of rolesToNotify) {
+    await createNotification({
+      title: 'Article Details Updated',
+      message: `The article "${post.title}" details have been updated.`,
+      type: 'Blog',
+      priority: 'Low',
+      recipientType: role,
+      module: 'Blog',
+      referenceId: post._id,
+      referenceType: 'BlogPost'
+    });
+  }
+};
+
+export const dispatchArticleDeleted = async (post: any) => {
+  const rolesToNotify = ['Super Admin', 'Admin', 'Manager'] as const;
+  for (const role of rolesToNotify) {
+    await createNotification({
+      title: 'Article Soft-Deleted 🗑️',
+      message: `The article "${post.title}" has been moved to trash.`,
+      type: 'Blog',
+      priority: 'Low',
+      recipientType: role,
+      module: 'Blog',
+      referenceId: post._id,
+      referenceType: 'BlogPost'
+    });
+  }
+};
+

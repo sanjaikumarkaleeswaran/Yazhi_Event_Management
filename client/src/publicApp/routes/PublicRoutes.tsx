@@ -10,6 +10,8 @@ const Gallery = lazy(() => import('../pages/Gallery'));
 const Packages = lazy(() => import('../pages/Packages'));
 const Testimonials = lazy(() => import('../pages/Testimonials'));
 const Contact = lazy(() => import('../pages/Contact'));
+const Blog = lazy(() => import('../pages/Blog'));
+const BlogPostDetail = lazy(() => import('../pages/BlogPostDetail'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
 export const PublicRoutes = () => {
@@ -25,6 +27,8 @@ export const PublicRoutes = () => {
         <Route path="gallery" element={<Gallery />} />
         <Route path="packages" element={<Packages />} />
         <Route path="testimonials" element={<Testimonials />} />
+        <Route path="blog" element={<Blog />} />
+        <Route path="blog/:slug" element={<BlogPostDetail />} />
         <Route path="contact" element={<Contact />} />
         <Route path="*" element={<NotFound />} />
       </Route>
