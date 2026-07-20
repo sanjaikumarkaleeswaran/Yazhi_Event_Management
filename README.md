@@ -2,7 +2,7 @@
 
 Yazhi Events is an enterprise-grade Event Management and Operations Platform designed for premium Tamil cultural event planning, client bookings, and workforce synchronization.
 
-This system provides a full-suite SaaS portal for administrators to manage inquiry pipelines, contract bookings, vendor assignments, team schedules, financial transactions, granular staff permissions, and real-time status feeds.
+This system provides a full-suite SaaS portal for administrators to manage inquiry pipelines, contract bookings, vendor assignments, team schedules, financial transactions, granular staff permissions, real-time status feeds, automated messaging alerts, and dynamic PDF document generation.
 
 ---
 
@@ -11,7 +11,7 @@ This system provides a full-suite SaaS portal for administrators to manage inqui
 The application is structured as a decoupled full-stack TypeScript application:
 
 *   **Frontend**: Built with **React 19**, **Vite**, **TypeScript**, **Tailwind CSS**, and **Framer Motion**. Utilizes **TanStack Query** for robust, real-time data caching, polling, and automatic invalidation.
-*   **Backend**: Powered by **Node.js**, **Express**, **TypeScript**, **Helmet** security guards, and **Mongoose**.
+*   **Backend**: Powered by **Node.js**, **Express**, **TypeScript**, **Helmet** security guards, **Mongoose**, and **PDFKit**.
 *   **Database**: **MongoDB Atlas** (using highly optimized indexing, pre-save hooks, and aggregation pipelines).
 
 ### Core Features
@@ -24,6 +24,8 @@ The application is structured as a decoupled full-stack TypeScript application:
 6.  **Real-Time Notification Engine**: Decoupled, event-driven dispatcher generating instant alerts on key events (booking modifications, CRM inquiries, team assignments, security warnings). Displays alerts in a premium, real-time polling sliding drawer.
 7.  **Financial Ledger & Payments**: Integrated Razorpay API transaction tracking with support for partial payments and CSV export.
 8.  **Deep Analytics Dashboard**: Aggregates business performance (revenue streams, booking distributions, lead conversion percentages) using MongoDB aggregation pipelines.
+9.  **Multi-Channel CRM Messaging Dispatcher**: Direct WhatsApp, SMS, and Email notification dispatcher to keep clients and workforce instant updated.
+10. **Automated PDF Generator Engine**: Dynamic PDFKit generation of official Event Invoices, Service Contracts & Agreements, and Payment Receipts.
 
 ---
 
@@ -45,7 +47,7 @@ yazhi_events/
 │   │   ├── middleware/         # Security guards, RBAC, error handlers
 │   │   ├── models/             # Mongoose schemas & TypeScript interfaces
 │   │   ├── routes/             # Express routing definitions
-│   │   └── utils/              # Seeders, admin creators, notification dispatchers
+│   │   └── utils/              # Seeders, admin creators, PDF generators & messaging dispatchers
 │   └── tsconfig.json
 └── docker-compose.yml
 ```
@@ -79,6 +81,16 @@ yazhi_events/
 *   `PATCH /api/notifications/:id/read` - Mark alert as read.
 *   `PATCH /api/notifications/read-all` - Bulk mark all notifications as read.
 *   `DELETE /api/notifications/clear` - Flush user alert history.
+
+### Document Generation (`/api/documents`)
+*   `GET /api/documents/invoice/:id` - Stream custom PDF invoice for booking.
+*   `GET /api/documents/contract/:id` - Stream legally binding service contract PDF.
+*   `GET /api/documents/receipt/:id` - Stream payment transaction receipt PDF.
+
+### CRM Communication (`/api/communication`)
+*   `POST /api/communication/send-whatsapp` - Dispatch WhatsApp CRM alert to customer/vendor.
+*   `POST /api/communication/send-sms` - Dispatch SMS text alert.
+*   `POST /api/communication/send-email` - Dispatch email notification.
 
 ### Analytics & Reports (`/api/analytics`)
 *   `GET /api/analytics/dashboard` - Get monthly earnings, booking allocations, and pipeline metrics.
