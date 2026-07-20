@@ -23,6 +23,8 @@ import notificationRoutes from './routes/notification.routes';
 import blogRoutes from './routes/blog.routes';
 import categoryRoutes from './routes/category.routes';
 import tagRoutes from './routes/tag.routes';
+import documentRoutes from './routes/document.routes';
+import communicationRoutes from './routes/communication.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware';
 
 const app: Application = express();
@@ -72,6 +74,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/blog', blogRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/communication', communicationRoutes);
 
 // Error handlers
 app.use(notFoundHandler);

@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { 
   Plus, Search, Eye, Edit2, Trash2, X, ChevronLeft, ChevronRight, 
-  Download, Calendar, Users, FileText, CheckSquare 
+  Download, Calendar, Users, FileText, CheckSquare, MessageCircle, Send, Printer
 } from 'lucide-react';
 import { 
   useBookings, useCreateBooking, useUpdateBooking, useDeleteBooking, 
@@ -13,6 +13,8 @@ import {
 } from '../../shared/hooks/useBookings';
 import { useVendors } from '../../shared/hooks/useVendors';
 import { useTeam } from '../../shared/hooks/useTeam';
+import { useDocuments } from '../../shared/hooks/useDocuments';
+import { useCommunication } from '../../shared/hooks/useCommunication';
 
 const PAGE_SIZE = 10;
 const EVENT_TYPES = ['Wedding', 'Birthday', 'Corporate', 'Valaikappu', 'Engagement', 'Anniversary', 'Other'];
@@ -78,10 +80,43 @@ export default function Bookings() {
   const [activeTab, setActiveTab] = useState('Overview');
   const [assigningVendor, setAssigningVendor] = useState(false);
   const [assigningTeam, setAssigningTeam] = useState(false);
+  const [messagingStatus, setMessagingStatus] = useState<string | null>(null);
+
   const { data: vendorsResponse } = useVendors({ limit: 100 });
   const allVendors = vendorsResponse?.data || [];
   const { data: teamResponse } = useTeam({ limit: 100 });
   const allTeam = teamResponse?.data || [];
+
+  const { openDocument, getInvoiceUrl, getContractUrl } = useDocuments();
+  const { sendWhatsApp, sendSMS } = useCommunication();
+
+  const handleSendWhatsAppAlert = (b: BookingData) => {
+    sendWhatsApp.mutate({
+      recipientPhone: b.phone,
+      recipientName: b.clientName,
+      title: 'Booking Update',
+      body: `Hello ${b.clientName}, your booking #${b.bookingNumber} for ${b.eventType} is currently ${b.status}. Total Amount: ₹${b.amount.toLocaleString('en-IN')}. - Yazhi Events`,
+    }, {
+      onSuccess: () => {
+        setMessagingStatus('WhatsApp notification sent successfully!');
+        setTimeout(() => setMessagingStatus(null), 4000);
+      }
+    });
+  };
+
+  const handleSendSMSAlert = (b: BookingData) => {
+    sendSMS.mutate({
+      recipientPhone: b.phone,
+      recipientName: b.clientName,
+      title: 'Yazhi Alert',
+      body: `Yazhi Events: ${b.clientName}, your ${b.eventType} event on ${new Date(b.eventDate).toLocaleDateString()} is confirmed. Contact us for updates.`,
+    }, {
+      onSuccess: () => {
+        setMessagingStatus('SMS alert dispatched!');
+        setTimeout(() => setMessagingStatus(null), 4000);
+      }
+    });
+  };
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(bookingSchema) as any
@@ -608,11 +643,58 @@ export default function Bookings() {
 
                 {activeTab === 'Documents' && (
                   <div className="space-y-6">
-                    <button className="w-full py-8 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 hover:border-[#C89B3C]/50 transition-colors">
-                      <FileText size={24} className="mb-2" />
-                      <span className="text-sm font-semibold">Click to upload document</span>
-                      <span className="text-xs mt-1">Contracts, Invoices, Requirements (PDF, JPG)</span>
-                    </button>
+                    {messagingStatus && (
+                      <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-xl animate-fade-in">
+                        {messagingStatus}
+                      </div>
+                    )}
+                    
+                    {/* PDF Generation Hub */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Automated Document Generator (PDF)</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => openDocument(getInvoiceUrl(selected._id!))}
+                          className="flex items-center justify-center gap-2 p-3 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors shadow-xs"
+                        >
+                          <FileText size={15} /> Download Invoice PDF
+                        </button>
+                        <button
+                          onClick={() => openDocument(getContractUrl(selected._id!))}
+                          className="flex items-center justify-center gap-2 p-3 bg-burgundy-700 bg-rose-900 text-white rounded-xl text-xs font-semibold hover:bg-rose-800 transition-colors shadow-xs"
+                        >
+                          <Printer size={15} /> Download Contract PDF
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Dispatch Messaging Hub */}
+                    <div className="space-y-3 pt-4 border-t border-gray-100">
+                      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Automated CRM Communication Alerts</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => handleSendWhatsAppAlert(selected)}
+                          className="flex items-center justify-center gap-2 p-3 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition-colors shadow-xs"
+                        >
+                          <MessageCircle size={15} /> Send WhatsApp Alert
+                        </button>
+                        <button
+                          onClick={() => handleSendSMSAlert(selected)}
+                          className="flex items-center justify-center gap-2 p-3 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-colors shadow-xs"
+                        >
+                          <Send size={15} /> Send SMS Alert
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100">
+                      <button className="w-full py-6 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 hover:border-[#C89B3C]/50 transition-colors">
+                        <FileText size={20} className="mb-1 text-gray-400" />
+                        <span className="text-xs font-semibold">Upload Additional Documents / Contracts</span>
+                        <span className="text-[10px] text-gray-400">PDF, JPG, PNG up to 10MB</span>
+                      </button>
+                    </div>
+
                     {selected.documents?.length ? (
                       <div className="space-y-2">
                         {selected.documents.map((d: any, i: number) => (
@@ -622,7 +704,7 @@ export default function Bookings() {
                           </div>
                         ))}
                       </div>
-                    ) : <p className="text-sm text-gray-400 text-center py-10">No documents uploaded.</p>}
+                    ) : null}
                   </div>
                 )}
 

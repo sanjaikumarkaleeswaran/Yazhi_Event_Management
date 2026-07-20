@@ -12,6 +12,7 @@ import {
   useVerifyRazorpayPayment, 
   useRefundPayment 
 } from '../../shared/hooks/usePayments';
+import { useDocuments } from '../../shared/hooks/useDocuments';
 
 const METHODS = ['Cash', 'UPI', 'Card', 'Net Banking', 'Cheque', 'Bank Transfer', 'Razorpay'];
 const STATUSES = ['Pending', 'Partially Paid', 'Paid', 'Failed', 'Cancelled', 'Refunded'];
@@ -33,6 +34,8 @@ export default function Payments() {
   const [page, setPage] = useState(1);
   const [modal, setModal] = useState<'create' | 'view' | 'refund' | 'invoice' | null>(null);
   const [selected, setSelected] = useState<any>(null);
+
+  const { openDocument, getReceiptUrl } = useDocuments();
 
   // Queries
   const { data: paymentsResp, isLoading } = usePayments({
@@ -482,6 +485,12 @@ export default function Payments() {
               <div className="flex items-center justify-between p-6 border-b border-gray-100">
                 <h2 className="text-lg font-bold text-gray-900">Invoice Preview</h2>
                 <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => openDocument(getReceiptUrl(selected._id))} 
+                    className="flex items-center gap-2 px-3 py-1.5 bg-teal-700 text-white rounded-xl text-xs font-semibold hover:bg-teal-800 transition-colors shadow-xs"
+                  >
+                    <Download size={13} /> PDF Receipt
+                  </button>
                   <button onClick={() => window.print()} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors">
                     <Download size={13} /> Print Invoice
                   </button>

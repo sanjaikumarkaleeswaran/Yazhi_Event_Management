@@ -1,8 +1,9 @@
 import { SEO } from '../../shared/components/SEO';
 import { useAuth } from '../../shared/context/AuthContext';
 import { useMyBookings } from '../../shared/hooks/useBookings';
-import { ShoppingBag, Calendar, CreditCard } from 'lucide-react';
+import { ShoppingBag, Calendar, CreditCard, FileText, Printer } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useDocuments } from '../../shared/hooks/useDocuments';
 
 const StatCard = ({ title, value, icon: Icon, color }: any) => (
   <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
@@ -19,13 +20,12 @@ const StatCard = ({ title, value, icon: Icon, color }: any) => (
 const ClientDashboard = () => {
   const { user } = useAuth();
   const { data: bookingsResponse, isLoading } = useMyBookings();
+  const { openDocument, getInvoiceUrl, getContractUrl } = useDocuments();
 
   const bookings = bookingsResponse?.data || [];
   const totalBookings = bookings.length;
   const upcomingEvents = bookings.filter((b: any) => new Date(b.eventDate) >= new Date() && b.status !== 'Cancelled').length;
   
-  // Example calculation for pending payments - assuming pending bookings have unpaid amounts. 
-  // Normally this would be a specific payment property on the backend.
   const pendingAmount = bookings
     .filter((b: any) => b.status === 'Pending')
     .reduce((sum: number, b: any) => sum + (b.amount || 0), 0);
@@ -47,7 +47,7 @@ const ClientDashboard = () => {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Bookings</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Recent Bookings & Contracts</h2>
           <Link to="/client/bookings" className="text-sm text-[#C89B3C] font-medium hover:underline">View All</Link>
         </div>
         
@@ -62,19 +62,37 @@ const ClientDashboard = () => {
         ) : (
           <div className="space-y-4">
             {bookings.slice(0, 3).map((booking: any) => (
-              <div key={booking.id || booking._id} className="flex justify-between items-center p-4 border border-gray-50 rounded-lg bg-gray-50/50">
+              <div key={booking.id || booking._id} className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border border-gray-100 rounded-xl bg-gray-50/50 gap-4">
                 <div>
-                  <p className="font-semibold text-gray-900">{booking.eventType}</p>
-                  <p className="text-sm text-gray-500">{new Date(booking.eventDate).toLocaleDateString()}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-gray-900">{booking.eventType}</p>
+                    <span className="text-xs font-mono text-gray-400">#{booking.bookingNumber || booking._id?.slice(-6)}</span>
+                  </div>
+                  <p className="text-sm text-gray-500">{new Date(booking.eventDate).toLocaleDateString()} · {booking.venue || 'Venue TBD'}</p>
                 </div>
-                <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
-                  booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
-                  booking.status === 'Completed' ? 'bg-blue-100 text-blue-700' :
-                  booking.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                  'bg-yellow-100 text-yellow-700'
-                }`}>
-                  {booking.status}
-                </span>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openDocument(getInvoiceUrl(booking.id || booking._id))}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-medium hover:bg-slate-800 transition-colors"
+                  >
+                    <FileText size={13} /> Invoice
+                  </button>
+                  <button
+                    onClick={() => openDocument(getContractUrl(booking.id || booking._id))}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-900 text-white rounded-lg text-xs font-medium hover:bg-rose-800 transition-colors"
+                  >
+                    <Printer size={13} /> Contract
+                  </button>
+                  <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                    booking.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                    booking.status === 'Completed' ? 'bg-blue-100 text-blue-700' :
+                    booking.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                    'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {booking.status}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
