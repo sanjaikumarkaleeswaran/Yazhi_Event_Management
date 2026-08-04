@@ -141,16 +141,3 @@ Launch both servers concurrently:
 *   **Frontend Client**: Run `npm run dev` in `/client` (Starts at `http://localhost:5174`)
 
 ---
-
-## 📈 Roadmap Status
-
-- [x] Phase 1: Core Marketing Site & Public Inquiries
-- [x] Phase 2: Booking Management & Admin Panels
-- [x] Phase 3: Client Dashboard & Booking Trackers
-- [x] Phase 4: Reports, Financial Aggregations & CSV Exports (Module 7)
-- [x] Phase 5: Razorpay Payment Ledgers & Balance Tracking (Module 8)
-- [x] Phase 6: Enterprise Workforce & Staff Schedules (Module 10)
-- [x] Phase 7: Granular Permission Matrices & RBAC Guards (Module 11)
-- [x] Phase 8: Real-Time Notification Center Drawer & Polling (Module 12)
-- [x] Phase 9: WhatsApp & SMS CRM Alerts (Twilio / Messaging Dispatcher Engine)
-- [x] Phase 10: Automated PDF Generation (Invoices, Event Contracts & Payment Receipts)
