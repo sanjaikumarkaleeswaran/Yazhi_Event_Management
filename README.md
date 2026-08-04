@@ -26,6 +26,7 @@ The application is structured as a decoupled full-stack TypeScript application:
 8.  **Deep Analytics Dashboard**: Aggregates business performance (revenue streams, booking distributions, lead conversion percentages) using MongoDB aggregation pipelines.
 9.  **Multi-Channel CRM Messaging Dispatcher**: Direct WhatsApp, SMS, and Email notification dispatcher to keep clients and workforce instant updated.
 10. **Automated PDF Generator Engine**: Dynamic PDFKit generation of official Event Invoices, Service Contracts & Agreements, and Payment Receipts.
+11. **Enterprise Blog CMS**: Full-featured content management system with article authoring, category/tag organization, draft/publish workflow, SEO metadata, featured posts, slug generation, public blog pages, and admin reporting.
 
 ---
 
@@ -92,6 +93,16 @@ yazhi_events/
 *   `POST /api/communication/send-sms` - Dispatch SMS text alert.
 *   `POST /api/communication/send-email` - Dispatch email notification.
 
+### Blog CMS (`/api/blog`)
+*   `GET /api/blog` - Retrieve published blog posts with search, category, tag, featured, and pagination filters.
+*   `GET /api/blog/slug/:slug` - Fetch a single post by slug or ID.
+*   `POST /api/blog` - Create a new blog article (admin protected).
+*   `PUT /api/blog/:id` - Update an article with draft/publish/schedule transitions.
+*   `POST /api/blog/:id/duplicate` - Duplicate an article as a draft.
+*   `GET /api/blog/admin` - Retrieve admin blog list with draft and deleted articles.
+*   `GET /api/blog/admin/stats` - Fetch blog CMS statistics and performance insights.
+*   `GET /api/blog/admin/reports` - Retrieve blog report data for admin dashboards.
+
 ### Analytics & Reports (`/api/analytics`)
 *   `GET /api/analytics/dashboard` - Get monthly earnings, booking allocations, and pipeline metrics.
 *   `GET /api/analytics/export-ledgers` - Compile transactions list into CSV spreadsheet.
@@ -139,5 +150,15 @@ npm run seed
 Launch both servers concurrently:
 *   **Backend Server**: Run `npm run dev` in `/server` (Starts at `http://localhost:5000`)
 *   **Frontend Client**: Run `npm run dev` in `/client` (Starts at `http://localhost:5174`)
+
+### 4. Verification
+The current project state has been verified with:
+```bash
+# Client
+cd client && npm run build && npm run lint
+
+# Server
+cd server && npm run build
+```
 
 ---
