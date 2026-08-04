@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useAuth } from '../../shared/context/AuthContext';
+import { useAuth } from '../../shared/context/useAuth';
 import { Link } from 'react-router-dom';
 import {
   DollarSign, Calendar, MessageSquare,

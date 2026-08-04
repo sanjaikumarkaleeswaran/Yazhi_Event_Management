@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../../shared/context/AuthContext';
+import { useAuth } from '../../shared/context/useAuth';
 import type { ReactElement } from 'react';
 
 const ADMIN_COMPATIBLE_ROLES = ['Super Admin', 'Admin', 'Manager', 'Coordinator', 'Employee'];

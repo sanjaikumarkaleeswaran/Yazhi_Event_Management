@@ -1,5 +1,5 @@
 import { SEO } from '../../shared/components/SEO';
-import { useAuth } from '../../shared/context/AuthContext';
+import { useAuth } from '../../shared/context/useAuth';
 
 const ClientProfile = () => {
   const { user } = useAuth();

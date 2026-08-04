@@ -1,5 +1,5 @@
 import { SEO } from '../../shared/components/SEO';
-import { useAuth } from '../../shared/context/AuthContext';
+import { useAuth } from '../../shared/context/useAuth';
 import { useMyBookings } from '../../shared/hooks/useBookings';
 import { ShoppingBag, Calendar, CreditCard, FileText, Printer } from 'lucide-react';
 import { Link } from 'react-router-dom';

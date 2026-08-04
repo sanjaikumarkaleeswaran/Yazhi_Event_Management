@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -28,26 +28,22 @@ export default function Calendar() {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [warningModal, setWarningModal] = useState<{ id: string; date: string; existingBooking: string } | null>(null);
 
-  const filteredBookings = useMemo(() => {
-    return bookings.filter((b: any) => 
-      (statusFilter === 'All' || b.status === statusFilter) &&
-      (b.clientName.toLowerCase().includes(search.toLowerCase()) || 
-       b.eventType.toLowerCase().includes(search.toLowerCase()))
-    );
-  }, [bookings, search, statusFilter]);
+  const filteredBookings = bookings.filter((b: any) => 
+    (statusFilter === 'All' || b.status === statusFilter) &&
+    (b.clientName.toLowerCase().includes(search.toLowerCase()) || 
+     b.eventType.toLowerCase().includes(search.toLowerCase()))
+  );
 
-  const events = useMemo(() => {
-    return filteredBookings.map((b: any) => ({
-      id: b.id || (b as any)._id,
-      title: `${b.clientName} - ${b.eventType}`,
-      start: b.eventDate,
-      backgroundColor: STATUS_COLORS[b.status] || '#6B7280',
-      borderColor: STATUS_COLORS[b.status] || '#6B7280',
-      extendedProps: {
-        ...b
-      }
-    }));
-  }, [filteredBookings]);
+  const events = filteredBookings.map((b: any) => ({
+    id: b.id || (b as any)._id,
+    title: `${b.clientName} - ${b.eventType}`,
+    start: b.eventDate,
+    backgroundColor: STATUS_COLORS[b.status] || '#6B7280',
+    borderColor: STATUS_COLORS[b.status] || '#6B7280',
+    extendedProps: {
+      ...b
+    }
+  }));
 
   const handleEventDrop = (info: any) => {
     const droppedDate = info.event.startStr;

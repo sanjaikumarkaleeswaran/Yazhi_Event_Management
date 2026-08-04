@@ -1,31 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import api from '../api/axios';
-
-interface User {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  name: string;
-  email: string;
-  phone?: string;
-  role: string;
-  photo?: string;
-  permissions?: Record<string, Record<string, boolean>>;
-  status: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (userData: User) => void;
-  logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
-  hasPermission: (moduleName: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'approve' | 'assign') => boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext, type User } from './AuthContext.new';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -39,7 +15,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setUser(null);
       }
-    } catch (_error) {
+    } catch {
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -82,10 +58,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
