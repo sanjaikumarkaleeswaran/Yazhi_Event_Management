@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Eye, Share2, ArrowLeft, Heart, Check } from 'lucide-react';
-import { useBlogPost, useLikePost, useSharePost } from '../../shared/hooks/useBlog';
+import { useBlogPost, useLikePost, useSharePost, useComments, useCreateComment } from '../../shared/hooks/useBlog';
 import { SEO } from '../../shared/components/SEO';
+import CommentArea from '../components/CommentArea';
 
 export default function BlogPostDetail() {
   const { slug } = useParams();
@@ -249,6 +250,12 @@ export default function BlogPostDetail() {
                   </a>
                 </div>
               </div>
+            </div>
+
+            {/* Comments section */}
+            <div className="mt-12">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Comments</h3>
+              <CommentArea postId={post._id} />
             </div>
           </div>
         </div>

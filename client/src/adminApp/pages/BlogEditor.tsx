@@ -5,6 +5,8 @@ import {
   Sparkles, AlertCircle, CheckCircle,
   Bold, Italic, Heading2, Heading3, Quote, Link, List, ListOrdered, Code
 } from 'lucide-react';
+import { uploadImage as apiUploadImage } from '../../shared/api/upload';
+import { marked } from 'marked';
 import {
   useCreateBlogPost,
   useUpdateBlogPost,
@@ -16,6 +18,10 @@ export default function BlogEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const originalSnapshot = useRef<string>('');
+  const [postId, setPostId] = useState<string | null>(id || null);
 
   const isEditMode = !!id;
 
@@ -45,6 +51,7 @@ export default function BlogEditor() {
 
   // UI States
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
+  const [editorMode, setEditorMode] = useState<'html' | 'markdown'>('html');
   const [seoScore, setSeoScore] = useState(0);
   const [seoLogs, setSeoLogs] = useState<Array<{ text: string; passed: boolean; tip?: string }>>([]);
 
@@ -88,6 +95,9 @@ export default function BlogEditor() {
             setCanonicalUrl(res.canonicalUrl || '');
             setSchemaType(res.schemaType || 'Article');
             setMetaRobots(res.metaRobots || 'index, follow');
+              // track original snapshot
+              originalSnapshot.current = JSON.stringify({ title: res.title, slug: res.slug, excerpt: res.excerpt, content: res.content, coverImage: res.coverImage, category: res.category?._id || res.category || '', status: res.status, selectedTags: res.tags || [], seoTitle: res.seoTitle || '', seoDescription: res.seoDescription || '', focusKeyword: res.focusKeyword || '' });
+              setPostId(res._id || postId);
           }
         } catch (err) {
           console.error(err);
@@ -97,12 +107,83 @@ export default function BlogEditor() {
     }
   }, [id, isEditMode]);
 
+  // compute a snapshot string for dirty check
+  const makeSnapshot = () => JSON.stringify({ title, slug, excerpt, content, coverImage, category, status, selectedTags, seoTitle, seoDescription, focusKeyword });
+
+  const dirty = makeSnapshot() !== originalSnapshot.current;
+
+  // Warn before unload if unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (dirty) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+      return undefined;
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [dirty]);
+
+  // Autosave every 30 seconds when dirty
+  useEffect(() => {
+    const iv = setInterval(async () => {
+      if (!dirty) return;
+      setIsAutoSaving(true);
+      try {
+        const payload = {
+          title,
+          slug: slug || undefined,
+          excerpt,
+          content,
+          coverImage,
+          category,
+          tags: selectedTags,
+          status: 'Draft', // autosave as draft
+          seoTitle: seoTitle || title,
+          seoDescription: seoDescription || excerpt,
+          focusKeyword,
+          canonicalUrl,
+          schemaType,
+          metaRobots,
+        };
+
+        if (postId) {
+          await updateMutation.mutateAsync({ id: postId, data: payload });
+        } else {
+          const resp: any = await createMutation.mutateAsync(payload as any);
+          // If backend returns created id, capture it
+          const newId = resp?.data?._id || resp?.data?._id || resp?._id || resp?.data?._id;
+          if (newId) {
+            setPostId(newId);
+            // update URL to edit route without reload
+            navigate(`/admin/blog/edit/${newId}`, { replace: true });
+          }
+        }
+        originalSnapshot.current = makeSnapshot();
+        setLastSavedAt(new Date());
+      } catch (err) {
+        console.error('Auto-save failed', err);
+      } finally {
+        setIsAutoSaving(false);
+      }
+    }, 30000);
+    return () => clearInterval(iv);
+  }, [dirty, title, slug, excerpt, content, coverImage, category, selectedTags, seoTitle, seoDescription, focusKeyword, postId]);
+
   // Helper directly calling axios to get by ID
   const apiGetPost = async (postId: string) => {
     // We can fetch from backend `/api/blog/slug/${postId}` which will resolve by ID
     const importAxios = await import('../../shared/api/axios');
     const response: any = await importAxios.default.get(`/blog/slug/${postId}`);
     return response.data.data;
+  };
+
+  // Protect internal back navigation if unsaved
+  const handleBack = () => {
+    if (dirty && !confirm('You have unsaved changes. Discard and leave?')) return;
+    navigate('/admin/blog');
   };
 
   // SEO Realtime Grading Engine
@@ -225,11 +306,17 @@ export default function BlogEditor() {
     };
 
     try {
-      if (isEditMode) {
-        await updateMutation.mutateAsync({ id: id!, data: payload });
+      let resp: any = null;
+      if (postId) {
+        resp = await updateMutation.mutateAsync({ id: postId, data: payload });
       } else {
-        await createMutation.mutateAsync(payload);
+        resp = await createMutation.mutateAsync(payload as any);
+        const newId = resp?.data?._id || resp?._id || resp?.data?._id;
+        if (newId) setPostId(newId);
       }
+      // update original snapshot and navigate back to list
+      originalSnapshot.current = makeSnapshot();
+      setLastSavedAt(new Date());
       navigate('/admin/blog');
     } catch (err) {
       console.error(err);
@@ -256,7 +343,7 @@ export default function BlogEditor() {
       <div className="flex justify-between items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/admin/blog')}
+            onClick={handleBack}
             className="p-2 border border-gray-100 bg-gray-50 hover:bg-gray-100 rounded-xl text-gray-500 hover:text-gray-700 transition"
           >
             <ArrowLeft size={16} />
@@ -313,6 +400,13 @@ export default function BlogEditor() {
                   <Eye size={13} className="inline mr-1" />
                   Preview
                 </button>
+                  <div className="ml-3 flex items-center gap-2">
+                    <label className="text-xs text-gray-400">Mode</label>
+                    <select value={editorMode} onChange={e => setEditorMode(e.target.value as any)} className="text-xs px-2 py-1 rounded border">
+                      <option value="html">HTML</option>
+                      <option value="markdown">Markdown</option>
+                    </select>
+                  </div>
               </div>
               <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
                 Article Editor Canvas
@@ -359,13 +453,52 @@ export default function BlogEditor() {
                   className="w-full text-sm text-gray-600 border-b border-gray-150 py-2 focus:outline-none focus:border-[#C89B3C] resize-none placeholder-gray-300"
                 />
 
-                <textarea
-                  ref={textareaRef}
-                  placeholder="Write your article in HTML/rich-text here..."
-                  value={content}
-                  onChange={e => setContent(e.target.value)}
-                  className="w-full flex-1 text-sm text-gray-700 focus:outline-none resize-none font-sans min-h-[40vh] placeholder-gray-300"
-                />
+                <div
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    const files = Array.from(e.dataTransfer?.files || []);
+                    if (!files.length) return;
+                    const img = files.find(f => f.type.startsWith('image/'));
+                    if (!img) return;
+                    try {
+                      const resp = await apiUploadImage(img as File);
+                      const url = resp?.data?.url || resp?.url || resp?.data?.secure_url || resp?.secure_url;
+                      if (url) {
+                        // insert at caret
+                        const textarea = textareaRef.current;
+                        const start = textarea?.selectionStart || 0;
+                        const end = textarea?.selectionEnd || 0;
+                        const before = textarea?.value.substring(0, start) || '';
+                        const after = textarea?.value.substring(end) || '';
+                        const newVal = before + `<img src="${url}" alt="" />` + after;
+                        setContent(newVal);
+                      }
+                    } catch (err) {
+                      console.error('Upload failed', err);
+                      alert('Image upload failed');
+                    }
+                  }}
+                >
+                  {editorMode === 'html' ? (
+                    <textarea
+                      ref={textareaRef}
+                      placeholder="Write your article in HTML/rich-text here..."
+                      value={content}
+                      onChange={e => setContent(e.target.value)}
+                      className="w-full flex-1 text-sm text-gray-700 focus:outline-none resize-none font-sans min-h-[40vh] placeholder-gray-300"
+                    />
+                  ) : (
+                    <textarea
+                      ref={textareaRef}
+                      placeholder="Write your article in Markdown here..."
+                      value={content}
+                      onChange={e => setContent(e.target.value)}
+                      className="w-full flex-1 text-sm text-gray-700 focus:outline-none resize-none font-sans min-h-[40vh] placeholder-gray-300"
+                    />
+                  )}
+                  <div className="mt-2 text-xs text-gray-400">Drag & drop an image into the editor to upload and insert inline.</div>
+                </div>
               </div>
             ) : (
               /* Preview Mode */
@@ -380,10 +513,9 @@ export default function BlogEditor() {
                   )}
                   <h1 className="text-3xl font-extrabold text-gray-950 mt-4 leading-tight">{title || 'Untitled Post'}</h1>
                   {excerpt && <p className="text-lg text-gray-500 font-medium italic border-l-4 border-[#C89B3C] pl-4 py-1">{excerpt}</p>}
-                  <div
-                    className="text-gray-800 leading-relaxed text-sm space-y-4 pt-4"
-                    dangerouslySetInnerHTML={{ __html: content || '<p className="text-gray-400">No content composed yet.</p>' }}
-                  />
+                  <div className="text-gray-800 leading-relaxed text-sm space-y-4 pt-4">
+                    <div dangerouslySetInnerHTML={{ __html: editorMode === 'markdown' ? (content ? marked(content) : '<p className="text-gray-400">No content composed yet.</p>') : (content || '<p className="text-gray-400">No content composed yet.</p>') }} />
+                  </div>
                 </article>
               </div>
             )}
@@ -458,6 +590,35 @@ export default function BlogEditor() {
                   placeholder="index, follow"
                   className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C89B3C]/20 focus:border-[#C89B3C]"
                 />
+              </div>
+            </div>
+
+            {/* Social Preview */}
+            <div className="pt-4">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Social Preview</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border rounded-xl overflow-hidden bg-white">
+                  <div className="p-3 border-b bg-gray-50 text-xs font-bold">Open Graph Preview</div>
+                  <div className="p-3 flex gap-3">
+                    <img src={coverImage} alt="og" className="w-20 h-12 object-cover rounded" />
+                    <div>
+                      <div className="font-bold text-sm line-clamp-2">{seoTitle || title}</div>
+                      <div className="text-xs text-gray-500 mt-1 line-clamp-2">{seoDescription || excerpt}</div>
+                      <div className="text-[10px] text-gray-400 mt-2">{canonicalUrl || `/blog/${slug || 'your-slug'}`}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border rounded-xl overflow-hidden bg-white">
+                  <div className="p-3 border-b bg-gray-50 text-xs font-bold">Twitter Card Preview</div>
+                  <div className="p-3 flex gap-3 items-center">
+                    <img src={coverImage} alt="tw" className="w-20 h-12 object-cover rounded" />
+                    <div>
+                      <div className="font-bold text-sm">{seoTitle || title}</div>
+                      <div className="text-xs text-gray-500 mt-1 line-clamp-2">{seoDescription || excerpt}</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

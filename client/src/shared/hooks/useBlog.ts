@@ -308,3 +308,57 @@ export const usePermanentDeleteBlogPost = () => {
     }
   });
 };
+
+// Comments
+export const useComments = (filters?: any) => {
+  return useQuery({
+    queryKey: ['blog-comments', filters],
+    queryFn: async () => {
+      const response: any = await api.get('/blog/comments', { params: filters });
+      return response.data;
+    }
+  });
+};
+
+export const useCreateComment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const response: any = await api.post('/blog/comments', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blog-comments'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-post'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
+    }
+  });
+};
+
+export const useUpdateCommentStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      const response: any = await api.patch(`/blog/comments/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blog-comments'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-blog-posts'] });
+    }
+  });
+};
+
+export const useDeleteComment = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response: any = await api.delete(`/blog/comments/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blog-comments'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-blog-posts'] });
+    }
+  });
+};
