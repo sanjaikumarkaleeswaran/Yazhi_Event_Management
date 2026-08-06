@@ -180,3 +180,70 @@ The platform now includes:
 - Audit logging and centralized configuration support for future modules
 
 ---
+
+## 🔔 Module 14 — Enterprise Blog CMS (completed)
+
+This release adds a full-featured, production-ready Blog CMS for the Admin Portal and the Public Website with SEO, media, comments, and editorial tooling.
+
+- New backend models: `BlogCategory`, `BlogComment` (Mongoose)
+- Full blog APIs: public listing, article detail (by slug or id), admin CRUD, publish/schedule/duplicate, soft delete/restore, featured, stats and CSV reports
+- Category & comment management APIs and admin moderation
+- Cloudinary-backed media uploads (upload/replace/delete) with audit logging
+- Admin editor improvements: autosave (30s), unsaved-changes warning, markdown mode, drag & drop image upload (Cloudinary), inline `<img>` insertion, SEO audit panel, OpenGraph/Twitter preview
+- Public website: blog listing, article detail with structured data (JSON-LD), comments submission and listing
+
+Relevant files added/changed:
+- `server/src/models/BlogCategory.ts`
+- `server/src/models/BlogComment.ts`
+- `server/src/controllers/blogCategory.controller.ts`
+- `server/src/controllers/blogComment.controller.ts`
+- `server/src/controllers/upload.controller.ts`
+- `server/src/routes/blogCategory.routes.ts`
+- `server/src/routes/blogComment.routes.ts`
+- `server/src/routes/upload.routes.ts`
+- `server/src/utils/cloudinary.ts`
+- `client/src/adminApp/pages/BlogEditor.tsx` (editor + autosave + drag/drop upload)
+- `client/src/publicApp/components/CommentArea.tsx`
+- `client/src/adminApp/pages/BlogComments.tsx`
+- `client/src/shared/api/upload.ts`
+
+New/updated API endpoints (summary):
+- `GET /api/blog` — listing (search, filter, pagination)
+- `GET /api/blog/slug/:slug` — article detail (increments views)
+- `POST /api/blog` — create (admin)
+- `PUT /api/blog/:id` — update (admin)
+- `DELETE /api/blog/:id` — soft delete (admin)
+- `DELETE /api/blog/:id/permanent` — permanent delete (admin)
+- `POST /api/blog/:id/duplicate` — duplicate
+- `POST /api/blog/:id/restore` — restore soft-deleted
+- `POST /api/blog/:id/like` — likes
+- `POST /api/blog/:id/share` — shares
+- `GET /api/blog/admin` — admin listing
+- `GET /api/blog/admin/stats` — stats
+- `GET /api/blog/admin/reports` — CSV dataset
+- `GET /api/blog/categories` — categories
+- `POST /api/blog/categories` — create category (admin)
+- `PUT /api/blog/categories/:id` — update category
+- `DELETE /api/blog/categories/:id` — delete category
+- `POST /api/blog/comments` — submit comment (public)
+- `GET /api/blog/comments` — admin comments list
+- `PATCH /api/blog/comments/:id` — moderate (approve/reject)
+- `DELETE /api/blog/comments/:id` — delete comment
+- `POST /api/blog/upload` — upload image (admin)
+- `POST /api/blog/upload/replace` — replace image
+- `DELETE /api/blog/upload/:publicId` — delete image
+
+Cloudinary environment variables (server `.env`):
+```
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+```
+
+Notes:
+- Run `npm install` in both `server` and `client` after pulling changes (new deps: `cloudinary` on server, `marked` on client).
+- Upload endpoints require authenticated admin access.
+- For production, consider adding HTML sanitization for stored content and a block-based WYSIWYG editor (TipTap) in future work.
+
+See the full completion report: `COMPLETION_REPORT_MODULE_14.md` (root)
+
