@@ -7,6 +7,7 @@ import {
   dispatchBookingCancelled, 
   dispatchTeamAssigned 
 } from '../utils/notificationDispatcher';
+import { dispatchBookingCommunication } from '../utils/communicationService';
 
 // Generate Unique Booking Number
 const generateBookingNumber = () => {
@@ -139,6 +140,7 @@ export const createBooking = async (req: Request, res: Response) => {
 
     // Dispatch booking created notification
     await dispatchBookingCreated(savedBooking);
+  await dispatchBookingCommunication(savedBooking);
 
     // Update team members assignedBookings & timeline
     if (bookingData.assignedTeam && bookingData.assignedTeam.length > 0) {
@@ -277,6 +279,7 @@ export const updateBooking = async (req: Request, res: Response) => {
     .populate('assignedVendors');
 
     if (updatedBooking) {
+        await dispatchBookingCommunication(updatedBooking, updatedBooking.status === 'Cancelled' ? 'Booking Cancelled' : 'Booking Confirmation');
       if (updatedBooking.status === 'Cancelled') {
         await dispatchBookingCancelled(updatedBooking);
       } else {

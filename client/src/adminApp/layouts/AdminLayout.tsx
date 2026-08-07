@@ -7,7 +7,7 @@ import {
   Package, Star, Users, CreditCard, Settings, LogOut, Search,
   Bell, Menu, X, ChevronDown, FileText, BarChart2, Activity,
   UserCircle, ShoppingBag, Truck, Users2, BookOpen, Plus,
-  ChevronRight
+  ChevronRight, Send
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useUnreadNotificationsCount } from '../../shared/hooks/useNotifications';
@@ -48,6 +48,7 @@ const navGroups = [
     label: 'Finance',
     items: [
       { name: 'Payments', href: '/admin/payments', icon: CreditCard },
+      { name: 'Communications', href: '/admin/communications', icon: Send },
       { name: 'Reports', href: '/admin/reports', icon: FileText },
       { name: 'Analytics', href: '/admin/analytics', icon: BarChart2 },
     ]
@@ -80,6 +81,7 @@ const itemPermissionModule: Record<string, string> = {
   'Vendors': 'Vendors',
   'Team': 'Team',
   'Payments': 'Payments',
+  'Communications': 'Communications',
   'Reports': 'Reports',
   'Analytics': 'Reports',
   'Blog CMS': 'Blog',

@@ -16,6 +16,7 @@ const AdminBlog = lazy(() => import('../pages/Blog'));
 const AdminBlogEditor = lazy(() => import('../pages/BlogEditor'));
 const AdminBlogComments = lazy(() => import('../pages/BlogComments'));
 const AdminPayments = lazy(() => import('../pages/Payments'));
+const AdminCommunications = lazy(() => import('../pages/Communications'));
 const AdminUsers = lazy(() => import('../pages/Users'));
 const AdminSettings = lazy(() => import('../pages/Settings'));
 const AdminClients = lazy(() => import('../pages/Clients'));
@@ -45,6 +46,7 @@ export const AdminRoutes = () => {
           <Route path="blog/new" element={<PermissionRoute moduleName="Blog" element={<AdminBlogEditor />} />} />
           <Route path="blog/edit/:id" element={<PermissionRoute moduleName="Blog" element={<AdminBlogEditor />} />} />
           <Route path="payments" element={<PermissionRoute moduleName="Payments" element={<AdminPayments />} />} />
+          <Route path="communications" element={<PermissionRoute moduleName="Communications" element={<AdminCommunications />} />} />
           <Route path="users" element={<PermissionRoute moduleName="Users" element={<AdminUsers />} />} />
           <Route path="settings" element={<PermissionRoute moduleName="Settings" element={<AdminSettings />} />} />
           <Route path="clients" element={<PermissionRoute moduleName="Clients" element={<AdminClients />} />} />

@@ -54,6 +54,10 @@ export interface SettingsFormValues {
   fromEmail: string;
   fromName: string;
   enableEmailNotifications: boolean;
+  twilioAccountSid: string;
+  twilioAuthToken: string;
+  twilioPhoneNumber: string;
+  enableSMS: boolean;
   whatsappBusinessNumber: string;
   whatsappApiToken: string;
   webhookUrl: string;

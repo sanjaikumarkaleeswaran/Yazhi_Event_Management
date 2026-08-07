@@ -54,6 +54,10 @@ export interface ISetting extends Document {
   fromEmail: string;
   fromName: string;
   enableEmailNotifications: boolean;
+  twilioAccountSid: string;
+  twilioAuthToken: string;
+  twilioPhoneNumber: string;
+  enableSMS: boolean;
   whatsappBusinessNumber: string;
   whatsappApiToken: string;
   webhookUrl: string;
@@ -145,6 +149,10 @@ const settingSchema: Schema<ISetting> = new Schema(
     fromEmail: { type: String, default: 'hello@yazhievents.com' },
     fromName: { type: String, default: 'Yazhi Events' },
     enableEmailNotifications: { type: Boolean, default: true },
+    twilioAccountSid: { type: String, default: '' },
+    twilioAuthToken: { type: String, default: '' },
+    twilioPhoneNumber: { type: String, default: '' },
+    enableSMS: { type: Boolean, default: false },
     whatsappBusinessNumber: { type: String, default: '' },
     whatsappApiToken: { type: String, default: '' },
     webhookUrl: { type: String, default: '' },

@@ -1,3 +1,4 @@
+import { dispatchPaymentCommunication } from '../utils/communicationService';
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
@@ -142,6 +143,7 @@ export const createManualPayment = async (req: Request, res: Response, next: Nex
 
     if (payment.status === 'Paid') {
       const booking = await Booking.findById(payment.bookingId);
+        await dispatchPaymentCommunication(payment, booking);
       if (booking) {
         booking.advancePaid = (booking.advancePaid || 0) + payment.amount;
         const remaining = booking.amount - booking.advancePaid;

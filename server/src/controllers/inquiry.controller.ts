@@ -6,6 +6,7 @@ import {
   dispatchInquiryCreated, 
   dispatchInquiryConverted 
 } from '../utils/notificationDispatcher';
+import { dispatchInquiryCommunication } from '../utils/communicationService';
 
 const generateInquiryNumber = () => {
   return `INQ-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
@@ -34,6 +35,7 @@ export const createInquiry = async (req: Request, res: Response, next: NextFunct
     const newInquiry = await Inquiry.create(inquiryData);
 
     await dispatchInquiryCreated(newInquiry);
+  await dispatchInquiryCommunication(newInquiry);
 
     res.status(201).json({ status: 'success', data: newInquiry });
   } catch (error) {
