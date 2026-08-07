@@ -90,7 +90,17 @@ yazhi_events/
 - `GET /api/documents/contract/:id`
 - `GET /api/documents/receipt/:id`
 
-### CRM Communication (`/api/communication`)
+### Enterprise Communication Center (`/api/communications`)
+- `GET /api/communications`
+- `GET /api/communications/:id`
+- `POST /api/communications/email`
+- `POST /api/communications/sms`
+- `POST /api/communications/whatsapp`
+- `POST /api/communications/bulk`
+- `POST /api/communications/:id/resend`
+- `DELETE /api/communications/:id`
+
+Legacy notification aliases remain available under `/api/communication`:
 - `POST /api/communication/send-whatsapp`
 - `POST /api/communication/send-sms`
 - `POST /api/communication/send-email`
@@ -128,6 +138,18 @@ MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/yazhieve
 JWT_SECRET=super_secret_access_key_123!
 JWT_REFRESH_SECRET=super_secret_refresh_key_456!
 CLIENT_URL=http://localhost:5174
+
+# Optional communication providers. Missing credentials use console simulation mode.
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_PHONE_NUMBER=
+WHATSAPP_BUSINESS_NUMBER=
+WHATSAPP_API_TOKEN=
+WHATSAPP_WEBHOOK_URL=
 ```
 
 ### Client (`client/.env`)
@@ -178,6 +200,41 @@ The platform now includes:
 - A complete enterprise settings module with protected admin APIs
 - Multi-tab business configuration UI for General, Business, Booking, Payment, Email, WhatsApp, Cloudinary, Theme, Security, Backup, and Audit Logs
 - Audit logging and centralized configuration support for future modules
+
+## 🔔 Module 15 — Enterprise Communication Center (completed)
+
+Module 15 adds a persisted, multi-channel communication workspace for email, SMS,
+and WhatsApp operations.
+
+- MongoDB communication history with recipient, channel, template, status, delivery,
+	related booking/client/inquiry, sender, and error fields
+- Server-side search, filtering, sorting, pagination, CSV export support, bulk send,
+	retry, and deletion APIs
+- Nodemailer SMTP, Twilio SMS, and WhatsApp Business API integrations
+- Console simulation fallback when provider credentials are unavailable, so local
+	development and automated workflows do not crash
+- Automatic communication dispatch for booking creation/updates/cancellations,
+	inquiry creation, and completed manual payments
+- Admin UI at `/admin/communications` with KPI cards, responsive data table,
+	compose drawer, delivery timeline details, retry actions, loading skeletons,
+	empty states, and React Query cache invalidation
+- Module 13 Settings support for SMTP, WhatsApp, Twilio, email enablement, SMS
+	enablement, WhatsApp enablement, and dry-run configuration
+
+Relevant files:
+
+- `server/src/models/Communication.ts`
+- `server/src/utils/communicationService.ts`
+- `server/src/controllers/communication.controller.ts`
+- `server/src/routes/communication.routes.ts`
+- `client/src/adminApp/pages/Communications.tsx`
+- `client/src/adminApp/hooks/useCommunications.ts`
+
+Provider settings are configured through the authenticated admin Settings page.
+When credentials are missing, messages are recorded and simulated through the
+console fallback instead of failing the application request.
+
+See the full completion report: `COMPLETION_REPORT_MODULE_15.md` (root)
 
 ---
 
