@@ -29,7 +29,7 @@ const ClientLogin = () => {
     try {
       const response: any = await api.post('/auth/login', data);
       if (response?.data?.user) {
-        if (response.data.user.role !== 'client') {
+        if (response.data.user.role !== 'Client') {
            setErrorMsg('Only client accounts can access this portal.');
            return;
         }

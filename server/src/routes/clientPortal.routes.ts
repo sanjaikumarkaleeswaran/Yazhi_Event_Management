@@ -1,0 +1,26 @@
+import { Router } from 'express';
+import multer from 'multer';
+import { protect } from '../middleware/authMiddleware';
+import { resolveClient } from '../middleware/clientMiddleware';
+import { getDashboard, getBookings, getBooking, getCalendar, getDocuments, uploadDocument, deleteDocument, getNotifications, updateNotification, updateAllNotifications, getMessages, sendMessage, getProfile, updateProfile, getSettings, updateSettings } from '../controllers/clientPortal.controller';
+
+const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+router.use(protect, resolveClient);
+router.get('/dashboard', getDashboard);
+router.get('/bookings', getBookings);
+router.get('/bookings/:id', getBooking);
+router.get('/calendar', getCalendar);
+router.get('/documents', getDocuments);
+router.post('/documents', upload.single('file'), uploadDocument);
+router.delete('/documents/:id', deleteDocument);
+router.get('/notifications', getNotifications);
+router.patch('/notifications/read-all', updateAllNotifications);
+router.patch('/notifications/:id/read', updateNotification);
+router.get('/messages', getMessages);
+router.post('/messages', sendMessage);
+router.get('/profile', getProfile);
+router.patch('/profile', updateProfile);
+router.get('/settings', getSettings);
+router.patch('/settings', updateSettings);
+export default router;

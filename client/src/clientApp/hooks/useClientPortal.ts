@@ -1,0 +1,20 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import api from '../../shared/api/axios';
+
+const query = <T>(key: unknown[], url: string, params?: Record<string, unknown>, enabled = true) => useQuery<T>({ queryKey: key, queryFn: () => api.get(url, { params }), enabled });
+export const useClientDashboard = () => query<any>(['client-dashboard'], '/client/dashboard');
+export const useClientBookings = (params?: Record<string, unknown>) => query<any>(['client-bookings', params || {}], '/client/bookings', params);
+export const useClientBooking = (id?: string) => query<any>(['client-booking', id], `/client/bookings/${id}`, undefined, Boolean(id));
+export const useClientCalendar = () => query<any>(['client-calendar'], '/client/calendar');
+export const useClientDocuments = () => query<any>(['client-documents'], '/client/documents');
+export const useClientNotifications = (params?: Record<string, unknown>) => query<any>(['client-notifications', params || {}], '/client/notifications', params);
+export const useClientMessages = () => query<any>(['client-messages'], '/client/messages');
+export const useClientProfile = () => query<any>(['client-profile'], '/client/profile');
+export const useClientSettings = () => query<any>(['client-settings'], '/client/settings');
+export const useUploadClientDocument = () => { const client = useQueryClient(); return useMutation({ mutationFn: (form: FormData) => api.post('/client/documents', form, { headers: { 'Content-Type': 'multipart/form-data' } }), onSuccess: () => client.invalidateQueries({ queryKey: ['client-documents'] }) }); };
+export const useDeleteClientDocument = () => { const client = useQueryClient(); return useMutation({ mutationFn: (id: string) => api.delete(`/client/documents/${id}`), onSuccess: () => client.invalidateQueries({ queryKey: ['client-documents'] }) }); };
+export const useMarkNotificationRead = () => { const client = useQueryClient(); return useMutation({ mutationFn: (id: string) => api.patch(`/client/notifications/${id}/read`), onSuccess: () => { client.invalidateQueries({ queryKey: ['client-notifications'] }); client.invalidateQueries({ queryKey: ['client-dashboard'] }); } }); };
+export const useMarkAllNotificationsRead = () => { const client = useQueryClient(); return useMutation({ mutationFn: () => api.patch('/client/notifications/read-all'), onSuccess: () => { client.invalidateQueries({ queryKey: ['client-notifications'] }); client.invalidateQueries({ queryKey: ['client-dashboard'] }); } }); };
+export const useSendClientMessage = () => { const client = useQueryClient(); return useMutation({ mutationFn: (data: { subject: string; message: string; bookingId?: string }) => api.post('/client/messages', data), onSuccess: () => client.invalidateQueries({ queryKey: ['client-messages'] }) }); };
+export const useUpdateClientProfile = () => { const client = useQueryClient(); return useMutation({ mutationFn: (data: Record<string, unknown>) => api.patch('/client/profile', data), onSuccess: () => client.invalidateQueries({ queryKey: ['client-profile'] }) }); };
+export const useUpdateClientSettings = () => { const client = useQueryClient(); return useMutation({ mutationFn: (data: Record<string, boolean>) => api.patch('/client/settings', data), onSuccess: () => client.invalidateQueries({ queryKey: ['client-settings'] }) }); };

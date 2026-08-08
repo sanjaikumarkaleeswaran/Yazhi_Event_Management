@@ -29,6 +29,7 @@ import tagRoutes from './routes/tag.routes';
 import documentRoutes from './routes/document.routes';
 import communicationRoutes from './routes/communication.routes';
 import settingsRoutes from './routes/settings.routes';
+import clientPortalRoutes from './routes/clientPortal.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorMiddleware';
 
 const app: Application = express();
@@ -84,6 +85,7 @@ app.use('/api/tags', tagRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/communication', communicationRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/client', clientPortalRoutes);
 
 // Error handlers
 app.use(notFoundHandler);

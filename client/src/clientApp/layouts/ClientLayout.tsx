@@ -1,18 +1,22 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../shared/context/useAuth';
 import { useState } from 'react';
-import { LayoutDashboard, LogOut, Menu, X, UserCircle, ShoppingBag } from 'lucide-react';
+import { CalendarDays, FileText, LayoutDashboard, LogOut, Menu, MessageCircle, Settings, X, UserCircle, ShoppingBag, Bell } from 'lucide-react';
 import clsx from 'clsx';
+import { useClientNotifications } from '../hooks/useClientPortal';
 
 export const ClientLayout = () => {
   const { logout, user } = useAuth();
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  const { data: notificationData } = useClientNotifications({ isRead: false });
+  const unread = Array.isArray(notificationData?.data) ? notificationData.data.length : 0;
   const navItems = [
-    { name: 'Dashboard', href: '/client', icon: LayoutDashboard },
-    { name: 'My Bookings', href: '/client/bookings', icon: ShoppingBag },
-    { name: 'Profile', href: '/client/profile', icon: UserCircle },
+    { name: 'Dashboard', href: '/client', icon: LayoutDashboard }, { name: 'My Events', href: '/client/bookings', icon: ShoppingBag },
+    { name: 'Calendar', href: '/client/calendar', icon: CalendarDays }, { name: 'Documents', href: '/client/documents', icon: FileText },
+    { name: 'Messages', href: '/client/messages', icon: MessageCircle }, { name: 'Notifications', href: '/client/notifications', icon: Bell },
+    { name: 'Profile', href: '/client/profile', icon: UserCircle }, { name: 'Settings', href: '/client/settings', icon: Settings },
   ];
 
   return (
@@ -44,7 +48,7 @@ export const ClientLayout = () => {
                 isActive ? 'bg-[#C89B3C]/10 text-[#C89B3C]' : 'text-gray-600 hover:bg-gray-50'
               )}>
                 <item.icon size={18} className={isActive ? 'text-[#C89B3C]' : 'text-gray-400'} />
-                <span>{item.name}</span>
+                <span>{item.name}</span>{item.name === 'Notifications' && unread > 0 ? <span className="ml-auto rounded-full bg-[#C89B3C] px-2 py-0.5 text-[10px] text-white">{unread}</span> : null}
               </Link>
             );
           })}

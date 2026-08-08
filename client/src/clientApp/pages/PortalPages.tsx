@@ -1,0 +1,6 @@
+import type { ReactNode } from 'react';
+
+export const PortalPage = ({ title, eyebrow, children }: { title: string; eyebrow?: string; children: ReactNode }) => <div className="space-y-7"><div><p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#c89b3c]">{eyebrow || 'Yazhi Client Portal'}</p><h1 className="mt-2 font-serif text-4xl text-[#5a1e1e]">{title}</h1></div>{children}</div>;
+export const Panel = ({ children, className = '' }: { children: ReactNode; className?: string }) => <section className={`rounded-3xl border border-[#5a1e1e]/10 bg-white/80 p-6 shadow-[0_16px_50px_rgba(90,30,30,0.07)] backdrop-blur ${className}`}>{children}</section>;
+export const State = ({ loading, error, empty, retry }: { loading?: boolean; error?: boolean; empty?: string; retry?: () => void }) => loading ? <div className="h-32 animate-pulse rounded-2xl bg-[#e8ddca]" /> : error ? <Panel><p className="text-sm text-red-700">We could not load this information.</p><button onClick={retry} className="mt-3 text-sm font-semibold text-[#5a1e1e] underline">Try again</button></Panel> : empty ? <Panel><p className="text-center text-sm text-[#76675b]">{empty}</p></Panel> : null;
+export const statusClass = (status: string) => status === 'Confirmed' ? 'bg-emerald-50 text-emerald-700' : status === 'Cancelled' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700';

@@ -1,31 +1,3 @@
-import { SEO } from '../../shared/components/SEO';
-import { useAuth } from '../../shared/context/useAuth';
-
-const ClientProfile = () => {
-  const { user } = useAuth();
-  
-  return (
-    <div>
-      <SEO title="My Profile" description="Your Yazhi account profile" canonicalUrl="/dashboard/profile" />
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Profile</h1>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-2xl">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Name</label>
-            <p className="mt-1 text-gray-900">{user?.name}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <p className="mt-1 text-gray-900">{user?.email}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Role</label>
-            <p className="mt-1 text-gray-900 capitalize">{user?.role}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default ClientProfile;
+import { useEffect } from 'react'; import { useForm } from 'react-hook-form'; import { useClientProfile, useUpdateClientProfile } from '../hooks/useClientPortal'; import { Panel, PortalPage, State } from './PortalPages';
+type Profile = { name: string; email: string; phone: string; address?: string; profilePhoto?: string };
+export default function ClientProfile() { const { data, isLoading, isError, refetch } = useClientProfile(); const update = useUpdateClientProfile(); const { register, handleSubmit, reset } = useForm<Profile>(); useEffect(() => { if (data?.data) reset({ name: data.data.client?.name || data.data.user?.name || '', email: data.data.client?.email || data.data.user?.email || '', phone: data.data.client?.phone || '', address: data.data.client?.address || '', profilePhoto: data.data.client?.profilePhoto || '' }); }, [data, reset]); return <PortalPage title="Your profile"><State loading={isLoading} error={isError} retry={refetch} />{!isLoading && !isError && <div className="grid gap-6 lg:grid-cols-[1fr_300px]"><Panel><form onSubmit={handleSubmit((values) => update.mutate(values))} className="space-y-4"><label className="block text-sm font-semibold text-[#5a1e1e]">Name<input {...register('name', { required: true })} className="mt-2 w-full rounded-xl border border-[#5a1e1e]/15 px-4 py-3 font-normal" /></label><label className="block text-sm font-semibold text-[#5a1e1e]">Email<input type="email" {...register('email', { required: true })} className="mt-2 w-full rounded-xl border border-[#5a1e1e]/15 px-4 py-3 font-normal" /></label><label className="block text-sm font-semibold text-[#5a1e1e]">Phone<input {...register('phone', { required: true })} className="mt-2 w-full rounded-xl border border-[#5a1e1e]/15 px-4 py-3 font-normal" /></label><label className="block text-sm font-semibold text-[#5a1e1e]">Address<textarea {...register('address')} rows={3} className="mt-2 w-full rounded-xl border border-[#5a1e1e]/15 px-4 py-3 font-normal" /></label><button className="rounded-xl bg-[#5a1e1e] px-4 py-3 text-sm font-semibold text-white">{update.isPending ? 'Saving...' : 'Save profile'}</button></form></Panel><Panel><p className="text-xs uppercase tracking-widest text-[#a39688]">Account</p><p className="mt-3 text-sm text-[#76675b]">Created {data?.data?.user?.createdAt ? new Date(data.data.user.createdAt).toLocaleDateString('en-IN') : 'recently'}</p><p className="mt-2 text-sm text-[#76675b]">Last login {data?.data?.user?.lastLogin ? new Date(data.data.user.lastLogin).toLocaleDateString('en-IN') : 'not available'}</p></Panel></div>}</PortalPage>; }

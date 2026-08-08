@@ -35,6 +35,14 @@ export interface IUser extends Document {
   phone?: string;
   password?: string;
   photo?: string;
+  clientId?: mongoose.Types.ObjectId;
+  clientPreferences?: {
+    emailNotifications: boolean;
+    whatsappNotifications: boolean;
+    smsNotifications: boolean;
+    eventReminders: boolean;
+    marketingCommunications: boolean;
+  };
   role: 'Super Admin' | 'Admin' | 'Manager' | 'Coordinator' | 'Employee' | 'Vendor' | 'Client';
   permissions: Map<string, IPermissionActions>;
   status: 'Active' | 'Inactive' | 'Suspended';
@@ -89,6 +97,14 @@ const userSchema: Schema<IUser> = new Schema(
     photo: {
       type: String,
       default: '',
+    },
+    clientId: { type: Schema.Types.ObjectId, ref: 'Client', index: true },
+    clientPreferences: {
+      emailNotifications: { type: Boolean, default: true },
+      whatsappNotifications: { type: Boolean, default: true },
+      smsNotifications: { type: Boolean, default: false },
+      eventReminders: { type: Boolean, default: true },
+      marketingCommunications: { type: Boolean, default: false },
     },
     role: {
       type: String,
