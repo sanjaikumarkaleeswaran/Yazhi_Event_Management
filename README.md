@@ -28,6 +28,7 @@ The application is structured as a decoupled full-stack TypeScript solution:
 10. Automated PDF generation for invoices, contracts, and receipts
 11. Enterprise Blog CMS with drafts, publishing, SEO, categories, and tags
 12. Enterprise Settings & Business Configuration module for centralized business control
+13. Secure Enterprise Client Portal for client-owned events, documents, notifications, and messages
 
 ---
 
@@ -123,6 +124,28 @@ Legacy notification aliases remain available under `/api/communication`:
 - `POST /api/settings/backup`
 - `POST /api/settings/restore`
 
+### Enterprise Client Portal (`/api/client`)
+- `GET /api/client/dashboard`
+- `GET /api/client/bookings`
+- `GET /api/client/bookings/:id`
+- `GET /api/client/calendar`
+- `GET /api/client/documents`
+- `POST /api/client/documents`
+- `DELETE /api/client/documents/:id`
+- `GET /api/client/notifications`
+- `PATCH /api/client/notifications/:id/read`
+- `PATCH /api/client/notifications/read-all`
+- `GET /api/client/messages`
+- `POST /api/client/messages`
+- `GET /api/client/profile`
+- `PATCH /api/client/profile`
+- `GET /api/client/settings`
+- `PATCH /api/client/settings`
+
+Client portal requests require the existing JWT HTTP-only cookie authentication and
+are scoped to the authenticated user's linked Client profile. The server derives
+ownership from the session and does not trust client IDs supplied by the browser.
+
 ### Analytics & Reports (`/api/analytics`)
 - `GET /api/analytics/dashboard`
 - `GET /api/analytics/export-ledgers`
@@ -150,6 +173,12 @@ TWILIO_PHONE_NUMBER=
 WHATSAPP_BUSINESS_NUMBER=
 WHATSAPP_API_TOKEN=
 WHATSAPP_WEBHOOK_URL=
+BUSINESS_EMAIL=hello@yazhievents.com
+
+# Cloudinary document uploads
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
 ```
 
 ### Client (`client/.env`)
@@ -200,6 +229,35 @@ The platform now includes:
 - A complete enterprise settings module with protected admin APIs
 - Multi-tab business configuration UI for General, Business, Booking, Payment, Email, WhatsApp, Cloudinary, Theme, Security, Backup, and Audit Logs
 - Audit logging and centralized configuration support for future modules
+- A secure Client Portal at `/client` with dashboard, events, calendar, documents,
+	notifications, messages, profile, and preferences
+- Client-safe booking serializers and ownership middleware under `/api/client`
+- Cloudinary-backed client document uploads with ownership and file validation
+
+## 🔔 Module 17 — Enterprise Client Portal (completed)
+
+Module 17 adds a separate premium client experience while reusing the existing
+authentication, Client and Booking models, Notification Center, Communication
+Center, Cloudinary configuration, and React Query infrastructure.
+
+- Client routes: `/client/login`, `/client/forgot-password`, `/client/reset-password`,
+	`/client`, `/client/bookings`, `/client/calendar`, `/client/documents`,
+	`/client/notifications`, `/client/messages`, `/client/profile`, and `/client/settings`
+- Client ownership is resolved from `User.clientId`, with an email fallback for
+	legacy records, then enforced on bookings, documents, notifications, and messages
+- Booking responses are transformed into client-safe DTOs and omit internal notes,
+	audit data, private permissions, system secrets, and private vendor information
+- Document uploads support JPEG, PNG, WebP, and PDF files up to 10 MB through the
+	existing Cloudinary account
+- React Query mutations invalidate the relevant client cache after document, message,
+	profile, settings, and notification changes
+
+See [COMPLETION_REPORT_MODULE_17.md](COMPLETION_REPORT_MODULE_17.md) for the full
+architecture, security notes, API list, files, and verification status.
+
+The new Module 17 files compile cleanly in focused checks. Full repository builds
+remain blocked by pre-existing unrelated TypeScript errors in existing blog/admin/
+public modules; see the completion report for details.
 
 ## 🔔 Module 15 — Enterprise Communication Center (completed)
 
