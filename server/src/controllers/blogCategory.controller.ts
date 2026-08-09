@@ -28,7 +28,7 @@ export const createCategory = async (req: any, res: Response, next: NextFunction
 
     // Audit
     if (req.user) {
-      await AuditLog.create({ userId: req.user._id, userName: req.user.email || req.user.name || '', module: 'BlogCategory', action: 'Created', oldValue: null, newValue: cat });
+      await AuditLog.create({ userId: req.user._id, userName: req.user.email || req.user.name || '', module: 'BlogCategory', action: 'Created', oldValue: null, newValue: cat.toObject() as unknown as Record<string, unknown> });
     }
 
     res.status(201).json({ status: 'success', data: cat });
@@ -60,7 +60,7 @@ export const updateCategory = async (req: any, res: Response, next: NextFunction
     const updated = await BlogCategory.findByIdAndUpdate(id, { ...sanitized, updatedBy: req.user?._id }, { new: true, runValidators: true });
 
     if (req.user) {
-      await AuditLog.create({ userId: req.user._id, userName: req.user.email || req.user.name || '', module: 'BlogCategory', action: 'Updated', oldValue: existing, newValue: updated });
+      await AuditLog.create({ userId: req.user._id, userName: req.user.email || req.user.name || '', module: 'BlogCategory', action: 'Updated', oldValue: existing.toObject() as unknown as Record<string, unknown>, newValue: updated?.toObject() as unknown as Record<string, unknown> });
     }
 
     res.status(200).json({ status: 'success', data: updated });
@@ -89,7 +89,7 @@ export const deleteCategory = async (req: any, res: Response, next: NextFunction
 
     await BlogCategory.findByIdAndDelete(id);
     if (req.user) {
-      await AuditLog.create({ userId: req.user._id, userName: req.user.email || req.user.name || '', module: 'BlogCategory', action: 'Deleted', oldValue: existing, newValue: null });
+      await AuditLog.create({ userId: req.user._id, userName: req.user.email || req.user.name || '', module: 'BlogCategory', action: 'Deleted', oldValue: existing.toObject() as unknown as Record<string, unknown>, newValue: null });
     }
 
     res.status(200).json({ status: 'success', message: 'Category deleted' });

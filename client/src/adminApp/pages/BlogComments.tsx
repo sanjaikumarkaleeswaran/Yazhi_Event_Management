@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import { useComments, useUpdateCommentStatus, useDeleteComment } from '../../shared/hooks/useBlog';
 import { CheckCircle2, XCircle, Trash2 } from 'lucide-react';
 
 export default function BlogComments() {
-  const [page, setPage] = useState(1);
-  const filters = { page, limit: 20 };
+  const filters = { page: 1, limit: 20 };
   const { data: resp, isLoading } = useComments(filters as any);
   const updateStatus = useUpdateCommentStatus();
   const deleteComment = useDeleteComment();

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Eye, Share2, ArrowLeft, Heart, Check } from 'lucide-react';
-import { useBlogPost, useLikePost, useSharePost, useComments, useCreateComment } from '../../shared/hooks/useBlog';
+import { useBlogPost, useBlogPosts, useLikePost, useSharePost } from '../../shared/hooks/useBlog';
 import { SEO } from '../../shared/components/SEO';
 import CommentArea from '../components/CommentArea';
 
@@ -17,6 +17,8 @@ export default function BlogPostDetail() {
   const shareMutation = useSharePost();
 
   const post = postResp?.data;
+  const { data: relatedResp } = useBlogPosts(post?.category?.slug ? { category: post.category.slug, limit: 6 } : undefined);
+  const relatedPosts = (relatedResp?.data || []).filter((item: any) => item._id !== post?._id).slice(0, 4);
 
   const handleLike = async () => {
     if (!post || hasLiked) return;
@@ -80,7 +82,7 @@ export default function BlogPostDetail() {
     "dateModified": post.updatedAt,
     "author": [{
       "@type": "Person",
-      "name": post.author ? `${post.author.firstName} ${post.author.lastName}` : "Yazhi Events Team"
+      "name": post.author?.name || "Yazhi Events Team"
     }],
     "publisher": {
       "@type": "Organization",
@@ -99,6 +101,12 @@ export default function BlogPostDetail() {
         description={post.seoDescription || post.excerpt}
         canonicalUrl={post.canonicalUrl || `/blog/${post.slug}`}
         keywords={post.tags?.join(', ')}
+        image={post.ogImage || post.coverImage}
+        ogTitle={post.seo?.ogTitle}
+        ogDescription={post.seo?.ogDescription}
+        twitterTitle={post.seo?.twitterTitle}
+        twitterDescription={post.seo?.twitterDescription}
+        noIndex={post.metaRobots?.toLowerCase().includes('noindex')}
         schema={articleSchema}
       />
 
@@ -139,12 +147,12 @@ export default function BlogPostDetail() {
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-[#C89B3C]/10 text-[#C89B3C] flex items-center justify-center font-bold text-sm">
-                  {post.author ? post.author.firstName[0] : 'Y'}
+                  {(post.author?.name || 'Y')[0]}
                 </div>
               )}
               <div>
                 <p className="text-xs font-bold text-gray-900">
-                  By {post.author ? `${post.author.firstName} ${post.author.lastName}` : 'Yazhi Events Editor'}
+                  By {post.author?.name || 'Yazhi Events Editor'}
                 </p>
                 <p className="text-[10px] text-gray-400 font-semibold">{post.author?.role || 'Editorial Team'}</p>
               </div>
@@ -162,7 +170,7 @@ export default function BlogPostDetail() {
         <div className="mb-10 rounded-3xl overflow-hidden shadow-sm border border-gray-100 bg-gray-100 aspect-video max-h-[500px]">
           <img
             src={post.coverImage}
-            alt={post.title}
+            alt={post.coverImageAlt || post.title}
             className="w-full h-full object-cover"
           />
         </div>
@@ -187,6 +195,20 @@ export default function BlogPostDetail() {
                   ))}
                 </div>
               </div>
+            )}
+
+            {relatedPosts.length > 0 && (
+              <section className="border-t border-gray-150 pt-6">
+                <h2 className="text-lg font-extrabold text-gray-900 mb-4">Related articles</h2>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {relatedPosts.map((related: any) => (
+                    <button key={related._id} onClick={() => navigate(`/blog/${related.slug}`)} className="text-left border border-gray-100 rounded-xl overflow-hidden bg-white hover:border-[#C89B3C] transition">
+                      <img src={related.coverImage} alt={related.coverImageAlt || related.title} className="w-full aspect-video object-cover" loading="lazy" />
+                      <span className="block p-3 text-sm font-bold text-gray-900">{related.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
             )}
           </div>
 

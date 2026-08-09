@@ -143,6 +143,16 @@ export const useBlogPost = (slug: string) => {
   });
 };
 
+export const usePublicBlogs = (filters?: any) => useBlogPosts(filters);
+export const usePublicBlog = (slug: string) => useBlogPost(slug);
+
+export const useFeaturedBlogs = () => {
+  return useQuery({
+    queryKey: ['publicBlogs', 'featured'],
+    queryFn: async () => (await api.get('/blog/featured')).data
+  });
+};
+
 export const useLikePost = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -183,6 +193,38 @@ export const useAdminBlogPosts = (filters?: any) => {
     }
   });
 };
+
+export const useAdminBlogPost = (id: string) => {
+  return useQuery({
+    queryKey: ['adminBlogPost', id],
+    queryFn: async () => (await api.get(`/blog/admin/${id}`)).data,
+    enabled: !!id
+  });
+};
+
+const useBlogAction = (action: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data?: Record<string, unknown> }) => {
+      const response: any = await api.post(`/blog/${id}/${action}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['publicBlogs'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-blog-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['adminBlogPost'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-reports'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    }
+  });
+};
+
+export const usePublishBlog = () => useBlogAction('publish');
+export const useUnpublishBlog = () => useBlogAction('unpublish');
+export const useArchiveBlog = () => useBlogAction('archive');
+export const useFeatureBlog = () => useBlogAction('feature');
 
 export const useBlogStats = () => {
   return useQuery({

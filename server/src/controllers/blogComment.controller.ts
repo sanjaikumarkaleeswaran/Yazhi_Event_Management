@@ -59,7 +59,7 @@ export const updateCommentStatus = async (req: any, res: Response, next: NextFun
     await existing.save();
 
     if (req.user) {
-      await AuditLog.create({ userId: req.user._id, userName: req.user.email || req.user.name || '', module: 'BlogComment', action: 'StatusUpdated', oldValue: old, newValue: existing });
+      await AuditLog.create({ userId: req.user._id, userName: req.user.email || req.user.name || '', module: 'BlogComment', action: 'StatusUpdated', oldValue: old as unknown as Record<string, unknown>, newValue: existing.toObject() as unknown as Record<string, unknown> });
     }
 
     res.status(200).json({ status: 'success', data: existing });
@@ -76,7 +76,7 @@ export const deleteComment = async (req: any, res: Response, next: NextFunction)
 
     await BlogComment.findByIdAndDelete(id);
     if (req.user) {
-      await AuditLog.create({ userId: req.user._id, userName: req.user.email || req.user.name || '', module: 'BlogComment', action: 'Deleted', oldValue: existing, newValue: null });
+      await AuditLog.create({ userId: req.user._id, userName: req.user.email || req.user.name || '', module: 'BlogComment', action: 'Deleted', oldValue: existing.toObject() as unknown as Record<string, unknown>, newValue: null });
     }
 
     res.status(200).json({ status: 'success', message: 'Comment deleted' });

@@ -31,6 +31,7 @@ export default function BlogEditor() {
   const [excerpt, setExcerpt] = useState('');
   const [content, setContent] = useState('');
   const [coverImage, setCoverImage] = useState('https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=800');
+  const [coverImageAlt, setCoverImageAlt] = useState('');
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState('Draft');
   const [scheduledAt, setScheduledAt] = useState('');
@@ -81,6 +82,7 @@ export default function BlogEditor() {
             setExcerpt(res.excerpt);
             setContent(res.content);
             setCoverImage(res.coverImage);
+            setCoverImageAlt(res.coverImageAlt || '');
             setCategory(res.category?._id || res.category || '');
             setStatus(res.status);
             setFeatured(res.featured);
@@ -138,6 +140,7 @@ export default function BlogEditor() {
           excerpt,
           content,
           coverImage,
+          coverImageAlt,
           category,
           tags: selectedTags,
           status: 'Draft', // autosave as draft
@@ -174,9 +177,9 @@ export default function BlogEditor() {
 
   // Helper directly calling axios to get by ID
   const apiGetPost = async (postId: string) => {
-    // We can fetch from backend `/api/blog/slug/${postId}` which will resolve by ID
+    // Admin editing uses the protected detail endpoint, never the public article endpoint.
     const importAxios = await import('../../shared/api/axios');
-    const response: any = await importAxios.default.get(`/blog/slug/${postId}`);
+    const response: any = await importAxios.default.get(`/admin/blog/${postId}`);
     return response.data.data;
   };
 
@@ -290,6 +293,7 @@ export default function BlogEditor() {
       excerpt,
       content,
       coverImage,
+      coverImageAlt,
       category,
       tags: selectedTags,
       status,
@@ -351,6 +355,9 @@ export default function BlogEditor() {
           <div>
             <h2 className="font-bold text-gray-950 text-lg">{isEditMode ? 'Edit Article Workspace' : 'Compose New Article'}</h2>
             <p className="text-xs text-gray-400 mt-0.5">Author: You (Logged-in admin)</p>
+            <p className="text-[10px] text-gray-400 mt-1" aria-live="polite">
+              {isAutoSaving ? 'Saving draft...' : lastSavedAt ? `Saved ${lastSavedAt.toLocaleTimeString()}` : 'Unsaved changes'}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -727,6 +734,18 @@ export default function BlogEditor() {
                 onChange={e => setCoverImage(e.target.value)}
                 placeholder="Enter image URL from library..."
                 className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#C89B3C]/20 focus:border-[#C89B3C]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Alt text</label>
+              <input
+                type="text"
+                value={coverImageAlt}
+                onChange={e => setCoverImageAlt(e.target.value)}
+                placeholder="Describe the image for accessibility"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C89B3C]/20 focus:border-[#C89B3C]"
+                required
               />
             </div>
 

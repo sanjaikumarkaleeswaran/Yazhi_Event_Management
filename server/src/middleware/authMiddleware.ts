@@ -56,7 +56,7 @@ export const restrictTo = (...roles: string[]) => {
   };
 };
 
-export const hasPermission = (moduleName: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'approve' | 'assign') => {
+export const hasPermission = (moduleName: string, action: 'view' | 'create' | 'edit' | 'delete' | 'export' | 'publish' | 'approve' | 'assign') => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ status: 'error', message: 'Not authenticated' });

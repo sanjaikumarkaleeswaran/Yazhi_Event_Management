@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
+import sanitizeHtml from 'sanitize-html';
 import BlogPost, { BlogPostStatus } from '../models/BlogPost';
+import AuditLog from '../models/AuditLog';
 import Category from '../models/Category';
 import Tag from '../models/Tag';
 import {
@@ -9,6 +11,7 @@ import {
   dispatchArticleUpdated,
   dispatchArticleDeleted
 } from '../utils/notificationDispatcher';
+import { blogPostSchema } from '../validators/blog.validator';
 
 const slugify = (text: string) => {
   return text
@@ -27,10 +30,68 @@ const calculateReadingTime = (content: string): number => {
   return Math.ceil(words.length / 200) || 1; // 200 wpm
 };
 
+const publicContentOptions: sanitizeHtml.IOptions = {
+  allowedTags: [
+    'a', 'blockquote', 'br', 'code', 'em', 'h1', 'h2', 'h3', 'h4',
+    'hr', 'li', 'ol', 'p', 'pre', 'strong', 'table', 'tbody', 'td',
+    'th', 'thead', 'tr', 'u', 'ul', 'img'
+  ],
+  allowedAttributes: {
+    a: ['href', 'target', 'rel'],
+    img: ['src', 'alt', 'width', 'height'],
+    '*': ['class']
+  },
+  allowedSchemes: ['http', 'https', 'mailto'],
+  allowedSchemesByTag: { img: ['http', 'https'] }
+};
+
+const toPublicPost = (post: any) => {
+  const value = post.toObject ? post.toObject() : post;
+  return {
+    _id: value._id,
+    title: value.title,
+    slug: value.slug,
+    excerpt: value.excerpt,
+    content: sanitizeHtml(value.content, publicContentOptions),
+    coverImage: value.coverImage,
+    coverImageAlt: value.coverImageAlt || value.title,
+    gallery: value.gallery,
+    author: value.author ? {
+      name: value.author.name || [value.author.firstName, value.author.lastName].filter(Boolean).join(' '),
+      photo: value.author.photo,
+      role: value.author.role
+    } : undefined,
+    category: value.category ? {
+      name: value.category.name,
+      slug: value.category.slug,
+      color: value.category.color,
+      icon: value.category.icon
+    } : undefined,
+    tags: value.tags,
+    featured: value.featured,
+    readingTime: value.readingTime,
+    views: value.views,
+    publishedAt: value.publishedAt,
+    updatedAt: value.updatedAt,
+    seoTitle: value.seo?.title || value.seoTitle,
+    seoDescription: value.seo?.description || value.seoDescription,
+    focusKeyword: value.focusKeyword,
+    canonicalUrl: value.canonicalUrl,
+    ogImage: value.seo?.ogImage || value.ogImage,
+    metaRobots: value.seo?.noIndex ? 'noindex, nofollow' : value.metaRobots,
+    schemaType: value.schemaType
+  };
+};
+
 // 1. Create Post
 export const createPost = async (req: any, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const postData = { ...req.body };
+    const parsed = blogPostSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ status: 'error', message: 'Invalid article payload', errors: parsed.error.flatten() });
+      return;
+    }
+    const postData: any = { ...parsed.data };
     
     // Generate unique slug
     let baseSlug = postData.slug ? slugify(postData.slug) : slugify(postData.title);
@@ -52,13 +113,13 @@ export const createPost = async (req: any, res: Response, next: NextFunction): P
     if (postData.status === BlogPostStatus.PUBLISHED) {
       postData.publishedAt = new Date();
     } else if (postData.status === BlogPostStatus.SCHEDULED) {
-      if (!postData.scheduledAt) {
+      if (!postData.scheduledAt || postData.scheduledAt <= new Date()) {
         res.status(400).json({ status: 'error', message: 'Scheduling date is required for Scheduled status' });
         return;
       }
     }
 
-    const newPost = await BlogPost.create(postData);
+    const newPost: any = await BlogPost.create(postData);
     
     // Dispatch Notifications
     if (newPost.status === BlogPostStatus.PUBLISHED) {
@@ -87,7 +148,12 @@ export const createPost = async (req: any, res: Response, next: NextFunction): P
 export const updatePost = async (req: any, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    const postData = { ...req.body };
+    const parsed = blogPostSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ status: 'error', message: 'Invalid article payload', errors: parsed.error.flatten() });
+      return;
+    }
+    const postData = { ...parsed.data };
 
     const existing = await BlogPost.findById(id);
     if (!existing || existing.isDeleted) {
@@ -119,7 +185,7 @@ export const updatePost = async (req: any, res: Response, next: NextFunction): P
       if (postData.status === BlogPostStatus.PUBLISHED) {
         postData.publishedAt = new Date();
       } else if (postData.status === BlogPostStatus.SCHEDULED) {
-        if (!postData.scheduledAt) {
+        if (!postData.scheduledAt || postData.scheduledAt <= new Date()) {
           res.status(400).json({ status: 'error', message: 'Scheduling date is required for Scheduled status' });
           return;
         }
@@ -158,6 +224,8 @@ export const getAllPosts = async (req: Request, res: Response, next: NextFunctio
 
     const query: any = {
       status: BlogPostStatus.PUBLISHED,
+      visibility: { $ne: 'Private' },
+      publishedAt: { $lte: new Date() },
       isDeleted: false
     };
 
@@ -199,11 +267,12 @@ export const getAllPosts = async (req: Request, res: Response, next: NextFunctio
       .populate('category', 'name slug color icon')
       .sort({ featured: -1, featuredOrder: 1, publishedAt: -1, createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     res.status(200).json({
       status: 'success',
-      data: posts,
+      data: posts.map(toPublicPost),
       meta: {
         total,
         page,
@@ -216,32 +285,38 @@ export const getAllPosts = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
+export const getFeaturedPosts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  req.query.featured = 'true';
+  await getAllPosts(req, res, next);
+};
+
 // 4. Get Single Post (Public - Increment Views)
 export const getPostBySlug = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { slug } = req.params;
-    const slugStr = slug as string;
-    
-    // Support querying by Mongo ID or Slug
-    const query = mongoose.Types.ObjectId.isValid(slugStr)
-      ? { $or: [{ _id: slugStr }, { slug: slugStr }], isDeleted: false }
-      : { slug: slugStr, isDeleted: false };
-
-    const post = await BlogPost.findOne(query)
+    const post = await BlogPost.findOne({
+      slug: String(slug).toLowerCase(),
+      status: BlogPostStatus.PUBLISHED,
+      publishedAt: { $lte: new Date() },
+      isDeleted: false
+    })
       .populate('author', 'firstName lastName name photo role')
-      .populate('category', 'name slug color icon');
+      .populate('category', 'name slug color icon')
+      .lean();
 
     if (!post) {
       res.status(404).json({ status: 'error', message: 'Article not found' });
       return;
     }
 
-    // Increment views only on published articles or ignore for admins if wanted
-    // For simplicity, always increment
-    post.views += 1;
-    await post.save();
+    const viewCookie = `blog_view_${post._id}`;
+    if (!req.cookies?.[viewCookie]) {
+      await BlogPost.updateOne({ _id: post._id }, { $inc: { views: 1 } });
+      res.cookie(viewCookie, '1', { httpOnly: true, sameSite: 'lax', maxAge: 24 * 60 * 60 * 1000 });
+      post.views += 1;
+    }
 
-    res.status(200).json({ status: 'success', data: post });
+    res.status(200).json({ status: 'success', data: toPublicPost(post) });
   } catch (error) {
     next(error);
   }
@@ -298,6 +373,83 @@ export const duplicatePost = async (req: any, res: Response, next: NextFunction)
   } catch (error) {
     next(error);
   }
+};
+
+export const getAdminPostById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const post = await BlogPost.findOne({ _id: req.params.id, isDeleted: false })
+      .populate('author', 'firstName lastName name photo role')
+      .populate('category', 'name slug color icon');
+    if (!post) {
+      res.status(404).json({ status: 'error', message: 'Article not found' });
+      return;
+    }
+    res.status(200).json({ status: 'success', data: post });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const writeBlogAudit = async (req: any, action: string, post: any, oldValue: any = null) => {
+  await AuditLog.create({
+    userId: req.user?._id?.toString() || 'system',
+    userName: req.user?.email || req.user?.name || 'system',
+    module: 'Blog',
+    action,
+    oldValue,
+    newValue: post?.toObject ? post.toObject() : post,
+    ipAddress: req.ip || '',
+    browser: req.get('User-Agent') || '',
+    operatingSystem: 'Unknown'
+  });
+};
+
+export const publishPost = async (req: any, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const post = await BlogPost.findOne({ _id: req.params.id, isDeleted: false });
+    if (!post) { res.status(404).json({ status: 'error', message: 'Article not found' }); return; }
+    post.status = BlogPostStatus.PUBLISHED;
+    post.publishedAt = new Date();
+    post.scheduledAt = undefined;
+    await post.save();
+    await writeBlogAudit(req, 'Published', post);
+    await dispatchArticlePublished(post);
+    res.status(200).json({ status: 'success', data: post });
+  } catch (error) { next(error); }
+};
+
+export const unpublishPost = async (req: any, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const post = await BlogPost.findOne({ _id: req.params.id, isDeleted: false });
+    if (!post) { res.status(404).json({ status: 'error', message: 'Article not found' }); return; }
+    post.status = BlogPostStatus.DRAFT;
+    post.publishedAt = undefined;
+    await post.save();
+    await writeBlogAudit(req, 'Unpublished', post);
+    res.status(200).json({ status: 'success', data: post });
+  } catch (error) { next(error); }
+};
+
+export const archivePost = async (req: any, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const post = await BlogPost.findOne({ _id: req.params.id, isDeleted: false });
+    if (!post) { res.status(404).json({ status: 'error', message: 'Article not found' }); return; }
+    post.status = BlogPostStatus.ARCHIVED;
+    await post.save();
+    await writeBlogAudit(req, 'Archived', post);
+    res.status(200).json({ status: 'success', data: post });
+  } catch (error) { next(error); }
+};
+
+export const featurePost = async (req: any, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const post = await BlogPost.findOne({ _id: req.params.id, isDeleted: false });
+    if (!post) { res.status(404).json({ status: 'error', message: 'Article not found' }); return; }
+    post.featured = req.body?.featured !== undefined ? Boolean(req.body.featured) : !post.featured;
+    await post.save();
+    await writeBlogAudit(req, post.featured ? 'Featured' : 'Unfeatured', post);
+    res.status(200).json({ status: 'success', data: post });
+  } catch (error) { next(error); }
 };
 
 // 6. Like Post
