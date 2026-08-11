@@ -108,13 +108,23 @@ Legacy notification aliases remain available under `/api/communication`:
 
 ### Blog CMS (`/api/blog`)
 - `GET /api/blog`
+- `GET /api/blog/featured`
 - `GET /api/blog/slug/:slug`
 - `POST /api/blog`
 - `PUT /api/blog/:id`
 - `POST /api/blog/:id/duplicate`
+- `POST /api/blog/:id/publish`
+- `POST /api/blog/:id/unpublish`
+- `POST /api/blog/:id/archive`
+- `POST /api/blog/:id/feature`
 - `GET /api/blog/admin`
+- `GET /api/blog/admin/:id`
 - `GET /api/blog/admin/stats`
 - `GET /api/blog/admin/reports`
+
+Protected admin compatibility routes are also available under `/api/admin/blog`.
+Public article responses include only published, visible content and sanitized
+HTML. Admin actions use the existing JWT and Blog RBAC permissions.
 
 ### Enterprise Settings (`/api/settings`)
 - `GET /api/settings`
@@ -296,57 +306,20 @@ See the full completion report: `COMPLETION_REPORT_MODULE_15.md` (root)
 
 ---
 
-## 🔔 Module 14 — Enterprise Blog CMS (completed)
+## 🔔 Module 18 — Enterprise Blog CMS & SEO Management (completed)
 
-This release adds a full-featured, production-ready Blog CMS for the Admin Portal and the Public Website with SEO, media, comments, and editorial tooling.
+The existing blog CMS was extended for secure editorial publishing across the
+Admin Portal and public website.
 
-- New backend models: `BlogCategory`, `BlogComment` (Mongoose)
-- Full blog APIs: public listing, article detail (by slug or id), admin CRUD, publish/schedule/duplicate, soft delete/restore, featured, stats and CSV reports
-- Category & comment management APIs and admin moderation
-- Cloudinary-backed media uploads (upload/replace/delete) with audit logging
-- Admin editor improvements: autosave (30s), unsaved-changes warning, markdown mode, drag & drop image upload (Cloudinary), inline `<img>` insertion, SEO audit panel, OpenGraph/Twitter preview
-- Public website: blog listing, article detail with structured data (JSON-LD), comments submission and listing
-
-Relevant files added/changed:
-- `server/src/models/BlogCategory.ts`
-- `server/src/models/BlogComment.ts`
-- `server/src/controllers/blogCategory.controller.ts`
-- `server/src/controllers/blogComment.controller.ts`
-- `server/src/controllers/upload.controller.ts`
-- `server/src/routes/blogCategory.routes.ts`
-- `server/src/routes/blogComment.routes.ts`
-- `server/src/routes/upload.routes.ts`
-- `server/src/utils/cloudinary.ts`
-- `client/src/adminApp/pages/BlogEditor.tsx` (editor + autosave + drag/drop upload)
-- `client/src/publicApp/components/CommentArea.tsx`
-- `client/src/adminApp/pages/BlogComments.tsx`
-- `client/src/shared/api/upload.ts`
-
-New/updated API endpoints (summary):
-- `GET /api/blog` — listing (search, filter, pagination)
-- `GET /api/blog/slug/:slug` — article detail (increments views)
-- `POST /api/blog` — create (admin)
-- `PUT /api/blog/:id` — update (admin)
-- `DELETE /api/blog/:id` — soft delete (admin)
-- `DELETE /api/blog/:id/permanent` — permanent delete (admin)
-- `POST /api/blog/:id/duplicate` — duplicate
-- `POST /api/blog/:id/restore` — restore soft-deleted
-- `POST /api/blog/:id/like` — likes
-- `POST /api/blog/:id/share` — shares
-- `GET /api/blog/admin` — admin listing
-- `GET /api/blog/admin/stats` — stats
-- `GET /api/blog/admin/reports` — CSV dataset
-- `GET /api/blog/categories` — categories
-- `POST /api/blog/categories` — create category (admin)
-- `PUT /api/blog/categories/:id` — update category
-- `DELETE /api/blog/categories/:id` — delete category
-- `POST /api/blog/comments` — submit comment (public)
-- `GET /api/blog/comments` — admin comments list
-- `PATCH /api/blog/comments/:id` — moderate (approve/reject)
-- `DELETE /api/blog/comments/:id` — delete comment
-- `POST /api/blog/upload` — upload image (admin)
-- `POST /api/blog/upload/replace` — replace image
-- `DELETE /api/blog/upload/:publicId` — delete image
+- BlogPost visibility, nested SEO/social metadata, image alt text, author/category snapshots, scheduling, and indexes
+- Protected admin API namespace at `/api/admin/blog` alongside existing `/api/blog/admin` compatibility routes
+- Publish, unpublish, archive, feature, duplicate, stats, reports, pagination, search, categories, tags, comments, and Cloudinary media workflows
+- Existing JWT/RBAC, notifications, AuditLog, Cloudinary, and React Query infrastructure reused
+- Public content restricted to published visible articles with server-side HTML sanitization
+- Cookie-based view deduplication to avoid incrementing views on every repeated request
+- Dynamic canonical, robots, Open Graph, Twitter, and JSON-LD article metadata
+- Admin editor autosave status, protected draft loading, preview, SEO checks, and required cover-image alt text
+- Related published article recommendations on article detail pages
 
 Cloudinary environment variables (server `.env`):
 ```
@@ -355,10 +328,13 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 ```
 
-Notes:
-- Run `npm install` in both `server` and `client` after pulling changes (new deps: `cloudinary` on server, `marked` on client).
-- Upload endpoints require authenticated admin access.
-- For production, consider adding HTML sanitization for stored content and a block-based WYSIWYG editor (TipTap) in future work.
+Module dependencies include `sanitize-html` and `@types/sanitize-html` on the
+server, plus `marked` and `@types/marked` on the client.
 
-See the full completion report: `COMPLETION_REPORT_MODULE_14.md` (root)
+See the full completion report: [COMPLETION_REPORT_MODULE_18.md](COMPLETION_REPORT_MODULE_18.md)
+
+Build verification:
+
+- `npm --prefix client run build` passed
+- `npm --prefix server run build` passed
 
