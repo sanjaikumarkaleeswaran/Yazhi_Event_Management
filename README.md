@@ -106,6 +106,12 @@ Legacy notification aliases remain available under `/api/communication`:
 - `POST /api/communication/send-sms`
 - `POST /api/communication/send-email`
 
+> Current integration note: the mounted Express route is `/api/communication`
+> (singular), which is the compatibility path used by the existing admin UI.
+> The newer `CommunicationLog`, `MessageTemplate`, `AutomationRule`, and
+> `services/communication/*` implementation is present as the Module 19
+> foundation but is not yet mounted as the `/api/communications` route.
+
 ### Blog CMS (`/api/blog`)
 - `GET /api/blog`
 - `GET /api/blog/featured`
@@ -303,6 +309,38 @@ When credentials are missing, messages are recorded and simulated through the
 console fallback instead of failing the application request.
 
 See the full completion report: `COMPLETION_REPORT_MODULE_15.md` (root)
+
+## 🔔 Module 19 — Enterprise Communication Automation (foundation)
+
+Module 19 introduces the next-generation communication primitives while
+preserving the existing Module 15 communication APIs and Notification Center.
+The current foundation includes:
+
+- `CommunicationLog` records with channel, delivery status, provider metadata,
+	retry fields, timestamps, and idempotency keys
+- `MessageTemplate` records with channel-specific content and variable
+	substitution through the server-side template service
+- `AutomationRule` records and an automation service for event-driven
+	communication dispatch
+- Reusable email, SMS, WhatsApp, and in-app dispatch adapters under
+	`server/src/services/communication`
+- Client preference checks using the existing Client Portal settings
+- Console dry-run behavior when external provider credentials are unavailable
+- Existing Notification, Setting, AuditLog, authentication, and RBAC systems
+	retained as the integration boundaries
+
+The existing production-facing communication workflow remains available at
+`/api/communication` and `/admin/communications`. The enterprise Module 19
+controllers, routes, admin template/automation pages, reminder scheduler,
+and broader business-event wiring still require integration before this module
+can be marked complete.
+
+Provider credentials remain server-side and are configured through the existing
+Settings model. Missing provider credentials must use dry-run mode; secrets
+must never be returned by settings APIs or exposed to the React application.
+
+The latest server TypeScript build also includes the template lookup type fix in
+`server/src/services/communication/template.service.ts`.
 
 ---
 
